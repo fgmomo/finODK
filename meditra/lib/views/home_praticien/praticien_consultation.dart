@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:meditra/config/config.dart';
 import 'package:meditra/sevices/consultation_service.dart';
-import 'package:meditra/views/home_praticien/praticien_all_consultation.dart'; // Assurez-vous que ce fichier existe
+import 'package:meditra/views/home_praticien/praticien_all_consultation.dart'; 
 
 class PraticienConsultationScreen extends StatefulWidget {
   const PraticienConsultationScreen({super.key});
