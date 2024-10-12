@@ -19,6 +19,7 @@ dependencies:
   shimmer: ^3.0.0
   http: ^1.2.2  
   intl: ^0.19.0
+  
 
 dev_dependencies:
   flutter_test:
@@ -43,4 +44,6 @@ flutter:
     - assets/thym.png
     - assets/gingebre2.jpg
     - assets/prof.jpg
+    - assets/pra.png
+    - assets/back.png
   

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
 class ConsultationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -17,6 +18,7 @@ class ConsultationService {
     return snapshot.docs.isNotEmpty;
   }
 
+// Consultation en attente
   Future<void> createConsultation(String crenauId, String message, String visiteurId) async {
     // Création de la consultation avec l'ID du créneau, du message et du visiteur
     await FirebaseFirestore.instance.collection('consultations').add({
@@ -24,6 +26,7 @@ class ConsultationService {
       'message': message,
       'visiteurId': visiteurId,
       'createdAt': FieldValue.serverTimestamp(),
+       'status': 'en attente'
     });
   }
    Future<List<Map<String, dynamic>>> fetchConsultations() async {
@@ -44,6 +47,11 @@ class ConsultationService {
     for (var doc in consultationsSnapshot.docs) {
       var consultationData = doc.data() as Map<String, dynamic>;
       String crenauId = consultationData['crenauId'];
+
+ // Vérifie que le statut de la consultation est "en attente"
+    if (consultationData['status'] != 'en attente') {
+      continue; // Passe à l'itération suivante si le statut n'est pas "en attente"
+    }
 
       // Récupération du créneau
       DocumentSnapshot crenauSnapshot = await FirebaseFirestore.instance
@@ -68,6 +76,7 @@ class ConsultationService {
 
         // Ajout des données à la liste
         consultations.add({
+          'reference': doc.id,
           'visiteur': '${visiteurData['firstName']} ${visiteurData['lastName']}',
           'dateDemande': dateDemande,  // Stocker la date comme DateTime
           'crenau': crenauData,
@@ -84,4 +93,47 @@ class ConsultationService {
       return snapshot.docs.map((doc) => doc.data()).toList();
     });
   }
+
+Future<void> approveConsultation(String reference) async {
+  try {
+    // 1. Mettre à jour le statut de la consultation à "approuvé"
+    await FirebaseFirestore.instance
+        .collection('consultations')
+        .doc(reference)
+        .update({'status': 'approuvé'});
+
+    // 2. Récupérer les informations de la consultation (crenauId et visiteurId)
+    DocumentSnapshot consultationSnapshot = await FirebaseFirestore.instance
+        .collection('consultations')
+        .doc(reference)
+        .get();
+    var consultationData = consultationSnapshot.data() as Map<String, dynamic>;
+    String crenauId = consultationData['crenauId'];
+    String visiteurId = consultationData['visiteurId'];
+
+    // 3. Récupérer l'ID du praticien à partir du créneau
+    DocumentSnapshot crenauSnapshot = await FirebaseFirestore.instance
+        .collection('crenaux')
+        .doc(crenauId)
+        .get();
+    var crenauData = crenauSnapshot.data() as Map<String, dynamic>;
+    String praticienId = crenauData['praticien_id'];
+
+    // 4. Créer une nouvelle discussion dans Firestore
+    await FirebaseFirestore.instance.collection('discussions').add({
+      'praticienId': praticienId,
+      'visiteurId': visiteurId,
+      'createdAt': FieldValue.serverTimestamp(),
+      'lastMessage': 'La consultation a été approuvée. Vous pouvez maintenant discuter.',
+    });
+
+    print('Consultation approuvée et discussion créée avec succès.');
+  } catch (error) {
+    // En cas d'erreur, on lève une exception
+    throw Exception('Erreur lors de l\'approbation et création de discussion : $error');
+  }
+}
+
+
+
 }

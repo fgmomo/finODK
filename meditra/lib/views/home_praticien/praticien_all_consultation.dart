@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:meditra/config/config.dart';
 import 'package:meditra/sevices/consultation_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:meditra/views/home_praticien/DiscussionPage.dart';
+import 'package:meditra/views/home_praticien/approbation_modal.dart';
+import 'package:meditra/views/home_praticien/praticien_crenaux.dart';
 
 class PraticienAllConsultationScreen extends StatefulWidget {
   const PraticienAllConsultationScreen({super.key});
@@ -81,6 +85,59 @@ class _PraticienAllConsultationScreenState
     });
   }
 
+  // Définition de la méthode approuverConsultation
+ void approveConsultation(BuildContext context, String reference) async {
+  try {
+    // Logique pour approuver la consultation
+    await ConsultationService().approveConsultation(reference);
+
+    // Afficher la boîte de dialogue de confirmation avec le bouton "Ouvrir la discussion"
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return ConfirmationDialog(
+          title: 'Consultation approuvée avec succès',
+          message: 'La consultation a été approuvée. Vous pouvez commencer à discuter avec le patient.',
+          primaryButtonText: 'Ouvrir la discussion', // Nouveau bouton pour ouvrir la discussion
+          secondaryButtonText: 'Fermer', // Pour fermer la boîte de dialogue
+          onPrimaryButtonPressed: () {
+            Navigator.of(context).pop(); // Ferme la boîte de dialogue
+            // Redirige vers la page de discussion
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DiscussionPage(
+                  discussionId: reference, // Utilise la référence de la consultation comme ID de discussion
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    // Mettre à jour la liste des consultations après approbation
+    await fetchAndSetConsultations();
+  } catch (error) {
+    // Afficher un message d'erreur en cas de problème
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return ConfirmationDialog(
+          title: 'Erreur lors de l\'approbation',
+          message: 'Une erreur s\'est produite : $error',
+          primaryButtonText: 'Fermer', // Seulement un bouton pour fermer dans le cas d'une erreur
+          onPrimaryButtonPressed: () {
+            Navigator.of(context).pop();
+          },
+          icon: Icons.error,
+          backgroundColor: Colors.red[50]!, // Changez si nécessaire
+        );
+      },
+    );
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -139,6 +196,42 @@ class _PraticienAllConsultationScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 10), // Aligné avec la barre de recherche
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PraticienCrenauxScreen(),
+                              ),
+                            );
+                          },
+                          icon: Icon(Icons.remove_red_eye, color: Colors.white),
+                          label: Text(
+                            'Mes créneaux',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: couleurPrincipale,
+                            padding: EdgeInsets.symmetric(
+                                vertical: 13, horizontal: 18),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   // Barre de recherche
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -175,6 +268,8 @@ class _PraticienAllConsultationScreenState
                     physics: NeverScrollableScrollPhysics(),
                     itemBuilder: (context, index) {
                       var consultation = consultations[index];
+
+                      String reference = consultation['reference'];
                       String visiteur = consultation['visiteur'];
                       String profileImageUrl =
                           consultation['profileImageUrl'] ?? '';
@@ -267,7 +362,13 @@ class _PraticienAllConsultationScreenState
                                   children: [
                                     ElevatedButton(
                                       onPressed: () {
-                                        // Logique pour approuver
+                                        // Utiliser la référence de la consultation
+                                        String referenceConsultation =
+                                            consultation['reference'];
+
+                                        // Appel de la méthode pour approuver la consultation
+                                        approveConsultation(
+                                            context, referenceConsultation);
                                       },
                                       child: Text(
                                         'Approuver',
