@@ -2,22 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:meditra/config/config.dart';
 import 'package:meditra/sevices/consultation_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:meditra/views/home_praticien/DiscussionPage.dart';
-import 'package:meditra/views/home_praticien/approbation_modal.dart';
-import 'package:meditra/views/home_praticien/praticien_crenaux.dart';
-// PraticienConsultationScreen
 
-class PraticienAllConsultationScreen extends StatefulWidget {
-  const PraticienAllConsultationScreen({super.key});
+class VisiteurAllAttenteConsultationScreen extends StatefulWidget {
+  const VisiteurAllAttenteConsultationScreen({super.key});
 
   @override
-  State<PraticienAllConsultationScreen> createState() =>
-      _PraticienAllConsultationScreenState();
+  State<VisiteurAllAttenteConsultationScreen> createState() =>
+      _VisiteurAllAttenteConsultationScreenState();
 }
 
-class _PraticienAllConsultationScreenState
-    extends State<PraticienAllConsultationScreen> {
+class _VisiteurAllAttenteConsultationScreenState
+    extends State<VisiteurAllAttenteConsultationScreen> {
   late Future<List<Map<String, dynamic>>> consultationsFuture;
   List<Map<String, dynamic>> allConsultations = [];
   List<Map<String, dynamic>> filteredConsultations = [];
@@ -31,7 +27,7 @@ class _PraticienAllConsultationScreenState
   }
 
   Future<List<Map<String, dynamic>>> fetchAndSetConsultations() async {
-    allConsultations = await ConsultationService().fetchConsultations();
+    allConsultations = await ConsultationService().fetchConsultationsAttVisiteur();
     setState(() {
       filteredConsultations =
           allConsultations; // Initialement, toutes les consultations sont affichées
@@ -52,7 +48,7 @@ class _PraticienAllConsultationScreenState
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16), // Coins arrondis
           ),
-          title: Text('Message du Patient',
+          title: Text('Mon message',
               style: TextStyle(
                   fontFamily: policeLato, fontWeight: FontWeight.bold)),
           content: Text(message, style: TextStyle(fontFamily: policePoppins)),
@@ -85,65 +81,10 @@ class _PraticienAllConsultationScreenState
           .toList(); // Filtre les consultations en fonction de la requête
     });
   }
-
-  // Définition de la méthode approuverConsultation
- void approveConsultation(BuildContext context, String reference) async {
-  try {
-    // Logique pour approuver la consultation
-    await ConsultationService().approveConsultation(reference);
-
-    // Afficher la boîte de dialogue de confirmation avec le bouton "Ouvrir la discussion"
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return ConfirmationDialog(
-          title: 'Consultation approuvée avec succès',
-          message: 'La consultation a été approuvée. Vous pouvez commencer à discuter avec le patient.',
-          primaryButtonText: 'Ouvrir la discussion', // Nouveau bouton pour ouvrir la discussion
-          secondaryButtonText: 'Fermer', // Pour fermer la boîte de dialogue
-          onPrimaryButtonPressed: () {
-            Navigator.of(context).pop(); // Ferme la boîte de dialogue
-            // Redirige vers la page de discussion
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => DiscussionPage(
-                  discussionId: reference, // Utilise la référence de la consultation comme ID de discussion
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-
-    // Mettre à jour la liste des consultations après approbation
-    await fetchAndSetConsultations();
-  } catch (error) {
-    // Afficher un message d'erreur en cas de problème
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return ConfirmationDialog(
-          title: 'Erreur lors de l\'approbation',
-          message: 'Une erreur s\'est produite : $error',
-          primaryButtonText: 'Fermer', // Seulement un bouton pour fermer dans le cas d'une erreur
-          onPrimaryButtonPressed: () {
-            Navigator.of(context).pop();
-          },
-          icon: Icons.error,
-          backgroundColor: Colors.red[50]!, // Changez si nécessaire
-        );
-      },
-    );
-  }
-}
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-     
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: consultationsFuture,
         builder: (context, snapshot) {
@@ -165,7 +106,6 @@ class _PraticienAllConsultationScreenState
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16.0,
                         vertical: 10), // Aligné avec la barre de recherche
-                
                   ),
                   // Barre de recherche
                   Padding(
@@ -188,10 +128,11 @@ class _PraticienAllConsultationScreenState
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Text(
-                      'Demandes de consultation',
+                      'Historiques de consultation',
                       style: TextStyle(
                         fontSize: 16, // Taille réduite
                         fontWeight: FontWeight.bold,
+                        fontFamily: policeLato,
                         color: Colors.black,
                       ),
                     ),
@@ -205,9 +146,9 @@ class _PraticienAllConsultationScreenState
                       var consultation = consultations[index];
 
                       String reference = consultation['reference'];
-                      String visiteur = consultation['visiteur'];
+                      String praticien = consultation['praticien'];
                       String profileImageUrl =
-                          consultation['profileImageUrl'] ?? '';
+                          consultation['ImageUrl'] ?? '';
                       String date =
                           formatDate(consultation['dateDemande'].toString());
                       String heureDebut =
@@ -242,7 +183,7 @@ class _PraticienAllConsultationScreenState
                                         ),
                                         SizedBox(width: 10),
                                         Text(
-                                          visiteur,
+                                          praticien,
                                           style: TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold,
@@ -291,57 +232,40 @@ class _PraticienAllConsultationScreenState
                                   ],
                                 ),
                                 SizedBox(height: 15),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        // Utiliser la référence de la consultation
-                                        String referenceConsultation =
-                                            consultation['reference'];
+                                // Bouton Ouvrir la discussion
 
-                                        // Appel de la méthode pour approuver la consultation
-                                        approveConsultation(
-                                            context, referenceConsultation);
-                                      },
-                                      child: Text(
-                                        'Approuver',
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontFamily: policePoppins),
-                                      ),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: couleurPrincipale,
-                                        padding: EdgeInsets.symmetric(
-                                            vertical: 13, horizontal: 25),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
+                                Align(
+                                  alignment:
+                                      Alignment.centerLeft, // Aligné à gauche
+                                  child: ElevatedButton(
+                                    onPressed: () {   
+                                   // Redirige vers la page de discussion
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => DiscussionPage(
+                                            discussionId:
+                                                reference, // Utilise la référence de la consultation comme ID de discussion
+                                          ),
                                         ),
+                                      );
+                                    },
+                                    child: Text(
+                                      'Discussion indisponible',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontFamily: policePoppins,
                                       ),
                                     ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        // Logique pour rejeter
-                                      },
-                                      child: Text(
-                                        'Rejeter',
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontFamily: policePoppins),
-                                      ),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Color(0xFFC98181),
-                                        padding: EdgeInsets.symmetric(
-                                            vertical: 13, horizontal: 25),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                        ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blue,
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 13, horizontal: 25),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
                                       ),
                                     ),
-                                  ],
+                                  ),
                                 ),
                               ],
                             ),

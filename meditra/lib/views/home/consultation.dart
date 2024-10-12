@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:meditra/config/config.dart';
 import 'package:meditra/sevices/consultation_service.dart';
+import 'package:meditra/views/home/visiteur_consultation_all.dart';
 
 class VisiteurConsultationScreen extends StatefulWidget {
   const VisiteurConsultationScreen({super.key});
@@ -123,8 +124,41 @@ class _VisiteurConsultationScreenState
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+              crossAxisAlignment: CrossAxisAlignment.start,
+            children: [  
+                ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const VisiteurConsultationAllScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.remove_red_eye, color: Colors.white),
+                    label: const Text(
+                      'Mes consultations',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: couleurPrincipale,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 13, horizontal: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+             const Divider(
+              color: Colors.grey,
+              thickness: 0.5,
+              indent: 16,
+              endIndent: 18,
+            ),
+            
               // Barre de recherche
               TextField(
                 onChanged: (value) {

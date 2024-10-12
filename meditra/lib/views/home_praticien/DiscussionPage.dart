@@ -248,7 +248,7 @@ class _DiscussionPageState extends State<DiscussionPage> {
                                     child: Text(
                                       DateFormat('yMMMd').format(sentAt),
                                       style: TextStyle(
-                                          fontSize: 12, color: Colors.white),
+                                          fontSize: 10, color: Colors.white),
                                     ),
                                   ),
                                 ),
