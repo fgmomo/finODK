@@ -128,7 +128,7 @@ class _VisiteurAllAttenteConsultationScreenState
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Text(
-                      'Historiques de consultation',
+                      'Mes demandes de consultation',
                       style: TextStyle(
                         fontSize: 16, // Taille réduite
                         fontWeight: FontWeight.bold,
@@ -145,10 +145,10 @@ class _VisiteurAllAttenteConsultationScreenState
                     itemBuilder: (context, index) {
                       var consultation = consultations[index];
 
-                      String reference = consultation['reference'];
+                      // String reference = consultation['reference'];
                       String praticien = consultation['praticien'];
                       String profileImageUrl =
-                          consultation['ImageUrl'] ?? '';
+                          consultation['profileImageUrl'] ?? '';
                       String date =
                           formatDate(consultation['dateDemande'].toString());
                       String heureDebut =
@@ -240,25 +240,25 @@ class _VisiteurAllAttenteConsultationScreenState
                                   child: ElevatedButton(
                                     onPressed: () {   
                                    // Redirige vers la page de discussion
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => DiscussionPage(
-                                            discussionId:
-                                                reference, // Utilise la référence de la consultation comme ID de discussion
-                                          ),
-                                        ),
-                                      );
+                                      // Navigator.push(
+                                      //   context,
+                                      //   MaterialPageRoute(
+                                      //     builder: (context) => DiscussionPage(
+                                      //       discussionId:
+                                      //           reference, // Utilise la référence de la consultation comme ID de discussion
+                                      //     ),
+                                      //   ),
+                                      // );
                                     },
                                     child: Text(
-                                      'Discussion indisponible',
+                                      'Non Approuvée',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontFamily: policePoppins,
                                       ),
                                     ),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.blue,
+                                      backgroundColor: const Color.fromARGB(255, 255, 100, 100),
                                       padding: EdgeInsets.symmetric(
                                           vertical: 13, horizontal: 25),
                                       shape: RoundedRectangleBorder(

@@ -89,65 +89,6 @@ class ConsultationService {
     return consultations;
   }
 
-  // Consultation en attente du visiteur
-Future<List<Map<String, dynamic>>> fetchConsultationsAttVisiteur() async {
-  List<Map<String, dynamic>> consultations = [];
-
-  // Récupération de l'ID du visiteur connecté via Firebase Auth
-  String? visiteurId = FirebaseAuth.instance.currentUser?.uid;
-
-  if (visiteurId == null) {
-    print("Aucun utilisateur connecté.");
-    return consultations; // Retourne une liste vide si aucun utilisateur n'est connecté
-  }
-
-  try {
-    // Récupération des consultations où le visiteurId correspond à l'ID du visiteur connecté
-    QuerySnapshot consultationsSnapshot = await FirebaseFirestore.instance
-        .collection('consultations')
-        .where('visiteurId', isEqualTo: visiteurId) // Filtre sur le visiteur connecté
-        .where('status', isEqualTo: 'en attente') // Filtre sur les consultations "en attente"
-        .get();
-
-    for (var doc in consultationsSnapshot.docs) {
-      var consultationData = doc.data() as Map<String, dynamic>;
-      String crenauId = consultationData['crenauId'];
-
-      // Récupération du créneau correspondant à la consultation
-      DocumentSnapshot crenauSnapshot = await FirebaseFirestore.instance
-          .collection('crenaux')
-          .doc(crenauId)
-          .get();
-      var crenauData = crenauSnapshot.data() as Map<String, dynamic>;
-
-      // Récupération des données du praticien associé au créneau
-      String praticienId = crenauData['praticien_id'];
-      DocumentSnapshot praticienSnapshot = await FirebaseFirestore.instance
-          .collection('praticiens')
-          .doc(praticienId)
-          .get();
-      var praticienData = praticienSnapshot.data() as Map<String, dynamic>;
-
-      // Conversion du Timestamp en DateTime
-      DateTime dateDemande = (consultationData['createdAt'] as Timestamp).toDate();
-
-      // Ajout des données à la liste des consultations
-      consultations.add({
-        'reference': doc.id,
-        'crenau': crenauData,
-        'dateDemande': dateDemande, // Stocker la date comme DateTime
-        'praticien': '${praticienData['firstName']} ${praticienData['lastName']}', // Ajout des données du praticien
-        'profileImageUrl': praticienData['ImageUrl'], 
-        'message': consultationData['message'], // Ajout du message
-      });
-    }
-  } catch (e) {
-    print("Erreur lors de la récupération des consultations : $e");
-  }
-
-  return consultations;
-}
-
    // Consultation approuvé du praticien
    Future<List<Map<String, dynamic>>> fetchConsultationsApp() async {
     List<Map<String, dynamic>> consultations = [];
@@ -254,6 +195,181 @@ Future<void> approveConsultation(String reference) async {
   }
 }
 
+// Consultation en attente du visiteur
+Future<List<Map<String, dynamic>>> fetchConsultationsAttVisiteur() async {
+  List<Map<String, dynamic>> consultations = [];
 
+  // Récupération de l'ID du visiteur connecté via Firebase Auth
+  String? visiteurId = FirebaseAuth.instance.currentUser?.uid;
+
+  if (visiteurId == null) {
+    print("Aucun utilisateur connecté.");
+    return consultations; // Retourne une liste vide si aucun utilisateur n'est connecté
+  }
+
+  try {
+    // Récupération des consultations où le visiteurId correspond à l'ID du visiteur connecté
+    QuerySnapshot consultationsSnapshot = await FirebaseFirestore.instance
+        .collection('consultations')
+        .where('visiteurId', isEqualTo: visiteurId) // Filtre sur le visiteur connecté
+        .where('status', isEqualTo: 'en attente') // Filtre sur les consultations "en attente"
+        .get();
+
+    for (var doc in consultationsSnapshot.docs) {
+      var consultationData = doc.data() as Map<String, dynamic>;
+      String crenauId = consultationData['crenauId'];
+
+      // Récupération du créneau correspondant à la consultation
+      DocumentSnapshot crenauSnapshot = await FirebaseFirestore.instance
+          .collection('crenaux')
+          .doc(crenauId)
+          .get();
+      var crenauData = crenauSnapshot.data() as Map<String, dynamic>;
+
+      // Récupération des données du praticien associé au créneau
+      String praticienId = crenauData['praticien_id'];
+      DocumentSnapshot praticienSnapshot = await FirebaseFirestore.instance
+          .collection('praticiens')
+          .doc(praticienId)
+          .get();
+      var praticienData = praticienSnapshot.data() as Map<String, dynamic>;
+
+      // Conversion du Timestamp en DateTime
+      DateTime dateDemande = (consultationData['createdAt'] as Timestamp).toDate();
+
+      // Ajout des données à la liste des consultations
+      consultations.add({
+        'reference': doc.id,
+        'crenau': crenauData,
+        'dateDemande': dateDemande, // Stocker la date comme DateTime
+        'praticien': '${praticienData['firstName']} ${praticienData['lastName']}', // Ajout des données du praticien
+        'profileImageUrl': praticienData['photoUrl'], 
+        'message': consultationData['message'], // Ajout du message
+      });
+    }
+  } catch (e) {
+    print("Erreur lors de la récupération des consultations : $e");
+  }
+
+  return consultations;
+}
+
+// Consultation approuvée du visiteur
+Future<List<Map<String, dynamic>>> fetchConsultationsAppVisiteur() async {
+  List<Map<String, dynamic>> consultations = [];
+
+  // Récupération de l'ID du visiteur connecté via Firebase Auth
+  String? visiteurId = FirebaseAuth.instance.currentUser?.uid;
+
+  if (visiteurId == null) {
+    print("Aucun utilisateur connecté.");
+    return consultations; // Retourne une liste vide si aucun utilisateur n'est connecté
+  }
+
+  try {
+    // Récupération des consultations où le visiteurId correspond à l'ID du visiteur connecté
+    QuerySnapshot consultationsSnapshot = await FirebaseFirestore.instance
+        .collection('consultations')
+        .where('visiteurId', isEqualTo: visiteurId) // Filtre sur le visiteur connecté
+        .where('status', isEqualTo: 'approuvé') 
+        .get();
+
+    for (var doc in consultationsSnapshot.docs) {
+      var consultationData = doc.data() as Map<String, dynamic>;
+      String crenauId = consultationData['crenauId'];
+
+      // Récupération du créneau correspondant à la consultation
+      DocumentSnapshot crenauSnapshot = await FirebaseFirestore.instance
+          .collection('crenaux')
+          .doc(crenauId)
+          .get();
+      var crenauData = crenauSnapshot.data() as Map<String, dynamic>;
+
+      // Récupération des données du praticien associé au créneau
+      String praticienId = crenauData['praticien_id'];
+      DocumentSnapshot praticienSnapshot = await FirebaseFirestore.instance
+          .collection('praticiens')
+          .doc(praticienId)
+          .get();
+      var praticienData = praticienSnapshot.data() as Map<String, dynamic>;
+
+      // Conversion du Timestamp en DateTime
+      DateTime dateDemande = (consultationData['createdAt'] as Timestamp).toDate();
+
+      // Ajout des données à la liste des consultations
+      consultations.add({
+        'reference': doc.id,
+        'crenau': crenauData,
+        'dateDemande': dateDemande, // Stocker la date comme DateTime
+        'praticien': '${praticienData['firstName']} ${praticienData['lastName']}', // Ajout des données du praticien
+        'profileImageUrl': praticienData['photoUrl'], 
+        'message': consultationData['message'], // Ajout du message
+      });
+    }
+  } catch (e) {
+    print("Erreur lors de la récupération des consultations : $e");
+  }
+
+  return consultations;
+}
+
+// Consultation rejetée du visiteur
+Future<List<Map<String, dynamic>>> fetchConsultationsRejVisiteur() async {
+  List<Map<String, dynamic>> consultations = [];
+
+  // Récupération de l'ID du visiteur connecté via Firebase Auth
+  String? visiteurId = FirebaseAuth.instance.currentUser?.uid;
+
+  if (visiteurId == null) {
+    print("Aucun utilisateur connecté.");
+    return consultations; // Retourne une liste vide si aucun utilisateur n'est connecté
+  }
+
+  try {
+    // Récupération des consultations où le visiteurId correspond à l'ID du visiteur connecté
+    QuerySnapshot consultationsSnapshot = await FirebaseFirestore.instance
+        .collection('consultations')
+        .where('visiteurId', isEqualTo: visiteurId) // Filtre sur le visiteur connecté
+        .where('status', isEqualTo: 'rejeté') 
+        .get();
+
+    for (var doc in consultationsSnapshot.docs) {
+      var consultationData = doc.data() as Map<String, dynamic>;
+      String crenauId = consultationData['crenauId'];
+
+      // Récupération du créneau correspondant à la consultation
+      DocumentSnapshot crenauSnapshot = await FirebaseFirestore.instance
+          .collection('crenaux')
+          .doc(crenauId)
+          .get();
+      var crenauData = crenauSnapshot.data() as Map<String, dynamic>;
+
+      // Récupération des données du praticien associé au créneau
+      String praticienId = crenauData['praticien_id'];
+      DocumentSnapshot praticienSnapshot = await FirebaseFirestore.instance
+          .collection('praticiens')
+          .doc(praticienId)
+          .get();
+      var praticienData = praticienSnapshot.data() as Map<String, dynamic>;
+
+      // Conversion du Timestamp en DateTime
+      DateTime dateDemande = (consultationData['createdAt'] as Timestamp).toDate();
+
+      // Ajout des données à la liste des consultations
+      consultations.add({
+        'reference': doc.id,
+        'crenau': crenauData,
+        'dateDemande': dateDemande, // Stocker la date comme DateTime
+        'praticien': '${praticienData['firstName']} ${praticienData['lastName']}', // Ajout des données du praticien
+         'profileImageUrl': praticienData['photoUrl'], 
+        'message': consultationData['message'], // Ajout du message
+      });
+    }
+  } catch (e) {
+    print("Erreur lors de la récupération des consultations : $e");
+  }
+
+  return consultations;
+}
 
 }

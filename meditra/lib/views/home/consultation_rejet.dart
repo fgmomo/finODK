@@ -27,7 +27,7 @@ class _VisiteurAllRejeteConsultationScreenState
   }
 
   Future<List<Map<String, dynamic>>> fetchAndSetConsultations() async {
-    allConsultations = await ConsultationService().fetchConsultationsApp();
+    allConsultations = await ConsultationService().fetchConsultationsRejVisiteur();
     setState(() {
       filteredConsultations =
           allConsultations; // Initialement, toutes les consultations sont affichées
@@ -48,7 +48,7 @@ class _VisiteurAllRejeteConsultationScreenState
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16), // Coins arrondis
           ),
-          title: Text('Message du Patient',
+          title: Text('Mon message',
               style: TextStyle(
                   fontFamily: policeLato, fontWeight: FontWeight.bold)),
           content: Text(message, style: TextStyle(fontFamily: policePoppins)),
@@ -94,7 +94,7 @@ class _VisiteurAllRejeteConsultationScreenState
             return Center(
                 child: Text('Erreur lors du chargement des consultations.'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('Aucune consultation approuvé.'));
+            return Center(child: Text('Aucune consultation en rejetée.'));
           } else {
             var consultations =
                 filteredConsultations; // Utilisation des consultations filtrées
@@ -145,8 +145,8 @@ class _VisiteurAllRejeteConsultationScreenState
                     itemBuilder: (context, index) {
                       var consultation = consultations[index];
 
-                      String reference = consultation['reference'];
-                      String visiteur = consultation['visiteur'];
+                      // String reference = consultation['reference'];
+                      String praticien = consultation['praticien'];
                       String profileImageUrl =
                           consultation['profileImageUrl'] ?? '';
                       String date =
@@ -183,7 +183,7 @@ class _VisiteurAllRejeteConsultationScreenState
                                         ),
                                         SizedBox(width: 10),
                                         Text(
-                                          visiteur,
+                                          praticien,
                                           style: TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold,
@@ -239,26 +239,16 @@ class _VisiteurAllRejeteConsultationScreenState
                                       Alignment.centerLeft, // Aligné à gauche
                                   child: ElevatedButton(
                                     onPressed: () {   
-                                   // Redirige vers la page de discussion
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => DiscussionPage(
-                                            discussionId:
-                                                reference, // Utilise la référence de la consultation comme ID de discussion
-                                          ),
-                                        ),
-                                      );
                                     },
                                     child: Text(
-                                      'Ouvrir la Discussion',
+                                      'Demande rejetée',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontFamily: policePoppins,
                                       ),
                                     ),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.blue,
+                                      backgroundColor: const Color.fromARGB(255, 255, 88, 77),
                                       padding: EdgeInsets.symmetric(
                                           vertical: 13, horizontal: 25),
                                       shape: RoundedRectangleBorder(

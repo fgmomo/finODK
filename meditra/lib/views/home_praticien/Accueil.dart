@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:meditra/views/home/plante.dart';
 import 'package:meditra/views/home/remede.dart';
 import 'package:meditra/views/home_praticien/appbottombar.dart';
+import 'package:meditra/views/home_praticien/articles.dart';
 import 'package:meditra/views/home_praticien/praticien_consultation.dart';
 import 'package:meditra/views/home_praticien/praticien_home.dart';
 
@@ -37,6 +38,7 @@ class _AccueilPraticienHomeScreenState extends State<AccueilPraticienHomeScreen>
           PlanteScreen(),
           RemedeScreen(),
           PraticienConsultationScreen(),
+          PraticienArticleScreen(),
         ],
       ),
       bottomNavigationBar: CustomBottomNavigationBarPraticien(

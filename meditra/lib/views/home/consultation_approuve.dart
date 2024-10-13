@@ -27,7 +27,7 @@ class _VisiteurAllApprouveConsultationScreenState
   }
 
   Future<List<Map<String, dynamic>>> fetchAndSetConsultations() async {
-    allConsultations = await ConsultationService().fetchConsultationsApp();
+    allConsultations = await ConsultationService().fetchConsultationsAppVisiteur();
     setState(() {
       filteredConsultations =
           allConsultations; // Initialement, toutes les consultations sont affichées
@@ -48,7 +48,7 @@ class _VisiteurAllApprouveConsultationScreenState
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16), // Coins arrondis
           ),
-          title: Text('Message du Patient',
+          title: Text('Mon message',
               style: TextStyle(
                   fontFamily: policeLato, fontWeight: FontWeight.bold)),
           content: Text(message, style: TextStyle(fontFamily: policePoppins)),
@@ -94,7 +94,7 @@ class _VisiteurAllApprouveConsultationScreenState
             return Center(
                 child: Text('Erreur lors du chargement des consultations.'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('Aucune consultation approuvé.'));
+            return Center(child: Text('Aucune consultation en attente.'));
           } else {
             var consultations =
                 filteredConsultations; // Utilisation des consultations filtrées
@@ -128,7 +128,7 @@ class _VisiteurAllApprouveConsultationScreenState
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Text(
-                      'Historiques de consultation',
+                      'Mes consultations approuvées',
                       style: TextStyle(
                         fontSize: 16, // Taille réduite
                         fontWeight: FontWeight.bold,
@@ -146,7 +146,7 @@ class _VisiteurAllApprouveConsultationScreenState
                       var consultation = consultations[index];
 
                       String reference = consultation['reference'];
-                      String visiteur = consultation['visiteur'];
+                      String praticien = consultation['praticien'];
                       String profileImageUrl =
                           consultation['profileImageUrl'] ?? '';
                       String date =
@@ -183,7 +183,7 @@ class _VisiteurAllApprouveConsultationScreenState
                                         ),
                                         SizedBox(width: 10),
                                         Text(
-                                          visiteur,
+                                          praticien,
                                           style: TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold,
@@ -251,7 +251,7 @@ class _VisiteurAllApprouveConsultationScreenState
                                       );
                                     },
                                     child: Text(
-                                      'Ouvrir la Discussion',
+                                      'Ouvrir la discussion',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontFamily: policePoppins,

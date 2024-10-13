@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:meditra/config/config.dart';
 import 'package:meditra/sevices/consultation_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:meditra/views/home_praticien/DiscussionPage.dart';
 import 'package:meditra/views/home_praticien/approbation_modal.dart';
-import 'package:meditra/views/home_praticien/praticien_crenaux.dart';
-// PraticienConsultationScreen
 
 class PraticienAllConsultationScreen extends StatefulWidget {
   const PraticienAllConsultationScreen({super.key});
@@ -204,7 +201,7 @@ class _PraticienAllConsultationScreenState
                     itemBuilder: (context, index) {
                       var consultation = consultations[index];
 
-                      String reference = consultation['reference'];
+                      // String reference = consultation['reference'];
                       String visiteur = consultation['visiteur'];
                       String profileImageUrl =
                           consultation['profileImageUrl'] ?? '';
