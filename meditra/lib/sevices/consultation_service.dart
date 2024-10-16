@@ -313,6 +313,66 @@ Future<List<Map<String, dynamic>>> fetchConsultationsAppVisiteur() async {
   return consultations;
 }
 
+// Récupérer la dernière consultation approuvée du visiteur
+Future<Map<String, dynamic>?> fetchDerniereConsultationAppVisiteur() async {
+  // Récupération de l'ID du visiteur connecté via Firebase Auth
+  String? visiteurId = FirebaseAuth.instance.currentUser?.uid;
+
+  if (visiteurId == null) {
+    print("Aucun utilisateur connecté.");
+    return null; // Retourne null si aucun utilisateur n'est connecté
+  }
+
+  try {
+    // Récupération de la dernière consultation approuvée (limitée à 1)
+    QuerySnapshot consultationsSnapshot = await FirebaseFirestore.instance
+        .collection('consultations')
+        .where('visiteurId', isEqualTo: visiteurId) // Filtre sur le visiteur connecté
+        .where('status', isEqualTo: 'approuvé') // Filtre pour les consultations approuvées
+        .orderBy('createdAt', descending: true) // Trie par date décroissante (la plus récente en premier)
+        .limit(1) // Limite à une seule consultation
+        .get();
+
+    if (consultationsSnapshot.docs.isNotEmpty) {
+      var doc = consultationsSnapshot.docs.first; // On prend le premier (et unique) document
+      var consultationData = doc.data() as Map<String, dynamic>;
+      String crenauId = consultationData['crenauId'];
+
+      // Récupération du créneau correspondant à la consultation
+      DocumentSnapshot crenauSnapshot = await FirebaseFirestore.instance
+          .collection('crenaux')
+          .doc(crenauId)
+          .get();
+      var crenauData = crenauSnapshot.data() as Map<String, dynamic>;
+
+      // Récupération des données du praticien associé au créneau
+      String praticienId = crenauData['praticien_id'];
+      DocumentSnapshot praticienSnapshot = await FirebaseFirestore.instance
+          .collection('praticiens')
+          .doc(praticienId)
+          .get();
+      var praticienData = praticienSnapshot.data() as Map<String, dynamic>;
+
+      // Conversion du Timestamp en DateTime
+      DateTime dateDemande = (consultationData['createdAt'] as Timestamp).toDate();
+
+      // Retourne les informations de la dernière consultation
+      return {
+        'reference': doc.id,
+        'crenau': crenauData,
+        'dateDemande': dateDemande, // Stocker la date comme DateTime
+        'praticien': '${praticienData['firstName']} ${praticienData['lastName']}', // Ajout des données du praticien
+        'profileImageUrl': praticienData['photoUrl'], 
+        'message': consultationData['message'], // Ajout du message
+      };
+    }
+  } catch (e) {
+    print("Erreur lors de la récupération de la dernière consultation : $e");
+  }
+
+  return null; // Retourne null s'il n'y a pas de consultation approuvée
+}
+
 // Consultation rejetée du visiteur
 Future<List<Map<String, dynamic>>> fetchConsultationsRejVisiteur() async {
   List<Map<String, dynamic>> consultations = [];

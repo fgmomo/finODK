@@ -72,7 +72,7 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Mes consultations à venir',
+                      'Ma consultation à venir',
                       style: TextStyle(
                         fontSize: 15,
                         fontFamily: policeLato,

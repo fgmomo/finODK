@@ -37,6 +37,10 @@ class CustomBottomNavigationBar extends StatelessWidget {
           icon: Icon(Icons.person),
           label: '', // Label vide
         ),
+         BottomNavigationBarItem(
+          icon: Icon(Icons.calendar_today),
+          label: '', // Label vide
+        ),
       ],
       selectedItemColor: couleurPrincipale,
       unselectedItemColor: const Color.fromARGB(255, 187, 216, 187),
@@ -45,7 +49,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
       showSelectedLabels: false, // Ne pas afficher les labels sélectionnés
       showUnselectedLabels:
           false, // Ne pas afficher les labels non sélectionnés
-      iconSize: 30, // Ajuste la taille des icônes
+      iconSize: 25, // Ajuste la taille des icônes
     );
   }
 }

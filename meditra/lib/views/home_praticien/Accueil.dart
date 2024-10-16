@@ -38,7 +38,7 @@ class _AccueilPraticienHomeScreenState extends State<AccueilPraticienHomeScreen>
           PlanteScreen(),
           RemedeScreen(),
           PraticienConsultationScreen(),
-          PraticienArticleScreen(),
+          PraticienAllArticleScreen(),
         ],
       ),
       bottomNavigationBar: CustomBottomNavigationBarPraticien(

@@ -5,6 +5,7 @@ import 'package:meditra/views/home/plante.dart';
 import 'package:meditra/views/home/remede.dart';
 import 'package:meditra/views/home/visiteur_home.dart';
 import 'package:meditra/views/home/visiteur_profil.dart';
+import 'package:meditra/views/home_praticien/articles.dart';
 
 class AccueilVisitorHomeScreen extends StatefulWidget {
   @override
@@ -51,8 +52,10 @@ class _AccueilVisitorHomeScreenState extends State<AccueilVisitorHomeScreen> {
         return RemedeScreen(key: ValueKey(2));
       case 3:
         return VisitorProfilScreen(key: ValueKey(3));
-      case 4: 
-        return VisiteurConsultationScreen(key: ValueKey(0));
+      case 4:
+        return PraticienAllArticleScreen(key: ValueKey(3));
+      case 5: 
+        return VisiteurConsultationScreen(key: ValueKey(4));
       default:
         return VisitorHomeScreen(key: ValueKey(0));
     }

@@ -1,15 +1,17 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:meditra/config/config.dart';
 import 'package:meditra/sevices/articles_services.dart';
 import 'package:meditra/views/home_praticien/articles_details.dart';
-// import 'package:meditra/views/home_praticien/articles_details.dart';
 import 'package:meditra/views/home_praticien/modifier_article_modal.dart';
 import 'package:meditra/views/home_praticien/publier_article_modal.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:meditra/views/home_praticien/suppression_article_modal.dart';
 
 class PraticienMesArticleScreen extends StatefulWidget {
-  const PraticienMesArticleScreen({super.key});
+  final Map<String, dynamic>? article;
+
+  const PraticienMesArticleScreen({super.key, this.article});
 
   @override
   State<PraticienMesArticleScreen> createState() =>
@@ -19,14 +21,24 @@ class PraticienMesArticleScreen extends StatefulWidget {
 class _PraticienMesArticleScreenState extends State<PraticienMesArticleScreen> {
   final ArticleService _articleService = ArticleService();
 
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  // Fonction async pour récupérer les avis
+  Future<int> _getAvisCount(DocumentReference articleRef) async {
+    List<Map<String, dynamic>> avis = await _articleService.getAvis(articleRef);
+    return avis.length;
+  }
+
   Stream<List<Map<String, dynamic>>> _streamArticles() {
     return _articleService.streamArticlesByPraticienId();
   }
 
   String formatDate(Timestamp timestamp) {
-    final dateTime = timestamp.toDate(); // Convertir le timestamp en DateTime
-    final difference =
-        DateTime.now().difference(dateTime); // Calculer la différence de temps
+    final dateTime = timestamp.toDate();
+    final difference = DateTime.now().difference(dateTime);
 
     if (difference.inDays > 0) {
       return 'posté il y a ${difference.inDays} jour${difference.inDays > 1 ? 's' : ''}';
@@ -121,11 +133,11 @@ class _PraticienMesArticleScreenState extends State<PraticienMesArticleScreen> {
                     itemCount: articles.length,
                     itemBuilder: (context, index) {
                       var article = articles[index];
+                      var articleRef = article['reference'];
                       return Column(
                         children: [
                           GestureDetector(
                             onTap: () {
-                              // Action à effectuer lors du clic sur la carte
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -140,9 +152,7 @@ class _PraticienMesArticleScreenState extends State<PraticienMesArticleScreen> {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               margin: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 16,
-                              ),
+                                  vertical: 10, horizontal: 16),
                               child: Stack(
                                 children: [
                                   Padding(
@@ -175,9 +185,9 @@ class _PraticienMesArticleScreenState extends State<PraticienMesArticleScreen> {
                                                   article['praticienNom'] ??
                                                       'Nom Inconnu',
                                                   style: const TextStyle(
+                                                    fontFamily: policeLato,
                                                     fontWeight: FontWeight.bold,
                                                     fontSize: 16,
-                                                    fontFamily: policeLato,
                                                   ),
                                                 ),
                                                 Text(
@@ -187,9 +197,9 @@ class _PraticienMesArticleScreenState extends State<PraticienMesArticleScreen> {
                                                               as Timestamp)
                                                       : 'Date Inconnue',
                                                   style: const TextStyle(
+                                                    fontFamily: policeLato,
                                                     color: Colors.grey,
                                                     fontSize: 12,
-                                                    fontFamily: policeLato,
                                                   ),
                                                 ),
                                               ],
@@ -204,7 +214,7 @@ class _PraticienMesArticleScreenState extends State<PraticienMesArticleScreen> {
                                                   'Aucune description',
                                           style: const TextStyle(
                                             fontSize: 15,
-                                            fontFamily: policePoppins,
+                                            fontFamily: policeLato,
                                           ),
                                         ),
                                         const SizedBox(height: 10),
@@ -237,26 +247,62 @@ class _PraticienMesArticleScreenState extends State<PraticienMesArticleScreen> {
                                                 ),
                                         ),
                                         const SizedBox(height: 10),
+                                        FutureBuilder<int>(
+                                          future: _getAvisCount(articleRef),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.connectionState ==
+                                                ConnectionState.waiting) {
+                                              return const CircularProgressIndicator();
+                                            } else if (snapshot.hasError) {
+                                              return Text(
+                                                  "Erreur: ${snapshot.error}");
+                                            } else {
+                                              return Text(
+                                                '${snapshot.data} avis',
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.grey,
+                                                ),
+                                              );
+                                            }
+                                          },
+                                        ),
+                                        const SizedBox(height: 10),
                                         Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Text(
-                                              '${article['avis'] ?? 0} avis',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
                                             Row(
                                               children: [
-                                                const Icon(
-                                                  Icons.favorite_border,
-                                                  color: Colors.red,
+                                                IconButton(
+                                                  icon: Icon(
+                                                    article['likes']?.contains(
+                                                                FirebaseAuth
+                                                                    .instance
+                                                                    .currentUser
+                                                                    ?.uid) ==
+                                                            true
+                                                        ? Icons.favorite
+                                                        : Icons.favorite_border,
+                                                    color: Colors.red,
+                                                  ),
+                                                  onPressed: () async {
+                                                    await _articleService
+                                                        .toggleLike(
+                                                            article['reference']
+                                                                .id,
+                                                            FirebaseAuth
+                                                                .instance
+                                                                .currentUser!
+                                                                .uid);
+                                                  },
                                                 ),
                                                 const SizedBox(width: 5),
                                                 Text(
-                                                  article['likes'].toString(),
+                                                  article['likes']
+                                                          ?.length
+                                                          .toString() ??
+                                                      '0',
                                                   style: const TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     color: Colors.grey,
@@ -319,12 +365,7 @@ class _PraticienMesArticleScreenState extends State<PraticienMesArticleScreen> {
                               ),
                             ),
                           ),
-                          const Divider(
-                            color: Colors.grey,
-                            thickness: 0.5,
-                            indent: 16,
-                            endIndent: 18,
-                          ),
+                          const Divider(thickness: 1),
                         ],
                       );
                     },
