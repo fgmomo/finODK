@@ -94,7 +94,7 @@ class _VisiteurAllRejeteConsultationScreenState
             return Center(
                 child: Text('Erreur lors du chargement des consultations.'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('Aucune consultation en rejetée.'));
+            return Center(child: Text('Aucune consultation rejetée.'));
           } else {
             var consultations =
                 filteredConsultations; // Utilisation des consultations filtrées

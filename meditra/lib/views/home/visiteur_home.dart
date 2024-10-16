@@ -1,19 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:meditra/config/config.dart';
+import 'package:meditra/sevices/consultation_service.dart';
+import 'package:meditra/views/home/consultation_approuve.dart';
+import 'package:meditra/views/home/visiteur_consultation_all.dart';
+import 'package:meditra/views/home_praticien/DiscussionPage.dart';
 
 class VisitorHomeScreen extends StatefulWidget {
-    const VisitorHomeScreen({Key? key}) : super(key: key);
+  const VisitorHomeScreen({Key? key}) : super(key: key);
+
   @override
   State<VisitorHomeScreen> createState() => _VisitorHomeScreenState();
 }
 
 class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
+  final ConsultationService _consultationService = ConsultationService();
+  Future<Map<String, dynamic>?>? _futureConsultation;
+
+  @override
+  void initState() {
+    super.initState();
+    // Appel pour récupérer la dernière consultation approuvée
+    _futureConsultation =
+        _consultationService.fetchDerniereConsultationAppVisiteur();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        // elevation: 0.0, // Supprimer l'ombre de l'AppBar
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -23,7 +38,7 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
                 fontSize: 22,
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
-                fontFamily: policeLato, // Utiliser la police définie
+                fontFamily: policeLato,
               ),
             ),
             SizedBox(height: 2),
@@ -40,20 +55,16 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
           IconButton(
             icon: Icon(
               Icons.notifications,
-              color: couleurPrincipale, // Couleur de l'icône
-              size: 35, // Taille de l'icône
+              color: couleurPrincipale,
+              size: 35,
             ),
-            onPressed: () {
-              // Logique de notification
-            },
-            padding:
-                EdgeInsets.all(10), // Ajoute un peu d'espace autour de l'icône
-            tooltip:
-                'Notifications', // Ajoute un tooltip pour plus d'accessibilité
+            onPressed: () {},
+            padding: EdgeInsets.all(10),
+            tooltip: 'Notifications',
           ),
         ],
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(1.0), // Bordure fine
+          preferredSize: Size.fromHeight(1.0),
           child: Container(
             color: Colors.black,
             height: 0.2,
@@ -67,12 +78,11 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Section Mes consultations à venir
               Row(
                 children: [
                   Expanded(
                     child: Text(
-                      'Ma consultation à venir',
+                      'Ma consultation actuelle',
                       style: TextStyle(
                         fontSize: 15,
                         fontFamily: policeLato,
@@ -82,7 +92,13 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
                   ),
                   TextButton(
                     onPressed: () {
-                      // Logique pour voir tout
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              VisiteurConsultationAllScreen(),
+                        ),
+                      );
                     },
                     child: Text(
                       'Voir tout',
@@ -97,317 +113,183 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
                 ],
               ),
 
-              // Carte de consultation
-              SingleChildScrollView(
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    gradient: LinearGradient(
-                      colors: [
-                couleurPrincipale,
-                const Color.fromARGB(255, 2, 39, 4)
-              ], 
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  padding: EdgeInsets.all(15),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ClipOval(
-                            child: Image.network(
-                              'https://via.placeholder.com/50', // Remplace par l'URL de la photo du praticien
-                              width: 50,
-                              height: 50,
-                              fit: BoxFit.cover,
+              // Utilisation d'un FutureBuilder pour récupérer et afficher la consultation
+              FutureBuilder<Map<String, dynamic>?>(
+                // Wrap InkWell ici
+                future: _futureConsultation,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(
+                        child:
+                            CircularProgressIndicator()); // Loader pendant le chargement
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Erreur : ${snapshot.error}'));
+                  } else if (snapshot.hasData && snapshot.data != null) {
+                    var consultation = snapshot.data!;
+                    String reference = consultation['reference'];
+                    // Rendre la carte cliquable avec InkWell
+                    return InkWell(
+                      onTap: () {
+                        // Redirige vers la page de discussion
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DiscussionPage(
+                              discussionId:
+                                  reference, // Utilise la référence de la consultation comme ID de discussion
                             ),
                           ),
-                          SizedBox(width: 15),
-                          Expanded(
-                            child: Column(
+                        );
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          gradient: LinearGradient(
+                            colors: [
+                              couleurPrincipale,
+                              Color.fromARGB(255, 2, 39, 4)
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        padding: EdgeInsets.all(15),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  'Dr Kontere', // Remplace par le nom du praticien
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.white,
-                                    fontFamily: policeLato,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                ClipOval(
+                                  child: consultation['profileImageUrl'] != null
+                                      ? Image.network(
+                                          consultation['profileImageUrl'],
+                                          width: 50,
+                                          height: 50,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
+                                            return Image.asset(
+                                              'assets/prof.jpg',
+                                              width: 50,
+                                              height: 50,
+                                              fit: BoxFit.cover,
+                                            );
+                                          },
+                                        )
+                                      : Image.asset(
+                                          'assets/prof.jpg',
+                                          width: 50,
+                                          height: 50,
+                                          fit: BoxFit.cover,
+                                        ),
                                 ),
-                                Text(
-                                  'Statut : Approuvé', // Statut de la consultation
-                                  style: TextStyle(color: Colors.grey),
+                                SizedBox(width: 15),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        consultation['praticien'],
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          color: Colors.white,
+                                          fontFamily: policeLato,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Statut : Approuvé',
+                                        style: TextStyle(color: Colors.grey),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 10),
-                      Divider(
-                          color: Colors.white, thickness: 1), // Ligne blanche
-                      SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.calendar_today, color: Colors.white),
-                              SizedBox(width: 5),
-                              Text(
-                                'Samedi, 3 Déc', // Date de la consultation
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontFamily: policePoppins,
+                            SizedBox(height: 10),
+                            Divider(color: Colors.white, thickness: 1),
+                            SizedBox(height: 10),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.calendar_today,
+                                        color: Colors.white),
+                                    SizedBox(width: 5),
+                                    Text(
+                                      '${consultation['crenau_date']}',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontFamily: policePoppins,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Icon(Icons.access_time, color: Colors.white),
-                              SizedBox(width: 5),
-                              Text(
-                                '11:00 - 12:00', // Heure de la consultation
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontFamily: policePoppins,
+                                Row(
+                                  children: [
+                                    Icon(Icons.access_time,
+                                        color: Colors.white),
+                                    SizedBox(width: 5),
+                                    Text(
+                                      '${consultation['crenau_heures']}',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontFamily: policePoppins,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 5), // Espacement entre les sections
-
-              // Section Explorez nos remèdes
-              Row(
-                children: [
-                  Text(
-                    'Explorez nos remèdes',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontFamily: policeLato,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Spacer(),
-                  TextButton(
-                    onPressed: () {
-                      // Logique pour voir tout
-                    },
-                    child: Text(
-                      'Voir tout',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontFamily: policeLato,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              // Maladies scrollables horizontalement
-              SizedBox(
-                height: 100,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 10, // Nombre de maladies
-                  itemBuilder: (context, index) {
+                    );
+                  } else {
+                    // Affichage du message dans une carte vide
                     return Container(
-                      width: 100,
-                      margin: EdgeInsets.symmetric(horizontal: 5),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        gradient: LinearGradient(
+                          colors: [
+                            couleurPrincipale,
+                            Color.fromARGB(255, 2, 39, 4)
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      padding: EdgeInsets.all(15),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color:
-                                  couleurSecondaire, // Couleur de fond de l'icône
-                            ),
-                            padding: EdgeInsets.all(15),
-                            child: Icon(
-                              Icons.grass, // Icône représentant la maladie
-                              size: 35,
-                              color: couleurPrincipale, // Couleur de l'icône
-                            ),
-                          ),
-                          SizedBox(height: 5),
                           Text(
-                            'Maladie $index', // Nom de la maladie
+                            'Aucune consultation approuvée trouvée.',
                             style: TextStyle(
-                              color: Colors.black, // Couleur du texte
-                              fontFamily: policePoppins,
+                              fontSize: 18,
+                              color: Colors.white,
+                              fontFamily: policeLato,
+                              fontWeight: FontWeight.bold,
                             ),
+                            textAlign: TextAlign.center,
                           ),
+                          SizedBox(height: 10),
+                          Icon(Icons.event_note, color: Colors.white, size: 40),
                         ],
                       ),
                     );
-                  },
-                ),
+                  }
+                },
               ),
-
               SizedBox(height: 5),
 
-              // Section Nos plantes
-              Row(
-                children: [
-                  Text(
-                    'Nos plantes',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontFamily: policeLato,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Spacer(),
-                  TextButton(
-                    onPressed: () {
-                      // Logique pour voir tout
-                    },
-                    child: Text(
-                      'Voir tout',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontFamily: policeLato,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              // Plantes scrollables horizontalement
-              SizedBox(
-                height:
-                    200, // Ajustement de la hauteur pour une image plus grande
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    _buildPlanteCard(
-                      'Aloe Vera',
-                      'https://via.placeholder.com/150', // Remplace par l'image de la plante
-                    ),
-                    _buildPlanteCard(
-                      'Menthe',
-                      'https://via.placeholder.com/150', // Remplace par l'image de la plante
-                    ),
-                    _buildPlanteCard(
-                      'Basilic',
-                      'https://via.placeholder.com/150', // Remplace par l'image de la plante
-                    ),
-                    _buildPlanteCard(
-                      'Lavande',
-                      'https://via.placeholder.com/150', // Remplace par l'image de la plante
-                    ),
-                  ],
-                ),
-              ),
-
-              // Section Nos plantes
-              Row(
-                children: [
-                  Text(
-                    'Découvrez nos praticiens',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontFamily: policeLato,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Spacer(),
-                  TextButton(
-                    onPressed: () {
-                      // Logique pour voir tout
-                    },
-                    child: Text(
-                      'Voir tout',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontFamily: policeLato,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              // Plantes scrollables horizontalement
-              SizedBox(
-                height:
-                    200, // Ajustement de la hauteur pour une image plus grande
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    _buildPlanteCard(
-                      'Aloe Vera',
-                      'https://via.placeholder.com/150', // Remplace par l'image de la plante
-                    ),
-                    _buildPlanteCard(
-                      'Menthe',
-                      'https://via.placeholder.com/150', // Remplace par l'image de la plante
-                    ),
-                    _buildPlanteCard(
-                      'Basilic',
-                      'https://via.placeholder.com/150', // Remplace par l'image de la plante
-                    ),
-                    _buildPlanteCard(
-                      'Lavande',
-                      'https://via.placeholder.com/150', // Remplace par l'image de la plante
-                    ),
-                  ],
-                ),
-              ),
+              // Section Explorez nos remèdes, etc...
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  // Fonction pour créer une carte de plante
-  Widget _buildPlanteCard(String nom, String imageUrl) {
-    return Container(
-      width: 130, // Ajustement de la largeur pour une image plus grande
-      margin: EdgeInsets.symmetric(horizontal: 10),
-      child: Column(
-        children: [
-          Container(
-            height: 150, // Ajustement de la hauteur de l'image
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10), // Bordures arrondies
-              image: DecorationImage(
-                image: NetworkImage(imageUrl),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            nom,
-            style: TextStyle(
-              fontFamily: policeLato,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
       ),
     );
   }
