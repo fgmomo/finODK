@@ -8,17 +8,17 @@ import 'package:meditra/views/home_praticien/publier_article_modal.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 
-class PraticienAllArticleScreen extends StatefulWidget {
+class VisiteurAllArticleScreen extends StatefulWidget {
   final Map<String, dynamic>? article;
 
-  const PraticienAllArticleScreen({super.key, this.article});
+  const VisiteurAllArticleScreen({super.key, this.article});
 
   @override
-  State<PraticienAllArticleScreen> createState() =>
-      _PraticienAllArticleScreenState();
+  State<VisiteurAllArticleScreen> createState() =>
+      _VisiteurAllArticleScreenState();
 }
 
-class _PraticienAllArticleScreenState extends State<PraticienAllArticleScreen> {
+class _VisiteurAllArticleScreenState extends State<VisiteurAllArticleScreen> {
   final ArticleService _articleService = ArticleService();
 
   @override
@@ -77,40 +77,7 @@ class _PraticienAllArticleScreenState extends State<PraticienAllArticleScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-            Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 5),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const PraticienMesArticleScreen(),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.remove_red_eye, color: Colors.white),
-                  label: const Text(
-                    'Mes articles',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: couleurPrincipale,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 13, horizontal: 18),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+           
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
             child: TextField(

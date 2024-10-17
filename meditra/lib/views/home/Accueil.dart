@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meditra/views/home/appbottombar.dart';
+import 'package:meditra/views/home/articles.dart';
 import 'package:meditra/views/home/consultation.dart';
 import 'package:meditra/views/home/plante.dart';
 import 'package:meditra/views/home/remede.dart';
@@ -53,7 +54,7 @@ class _AccueilVisitorHomeScreenState extends State<AccueilVisitorHomeScreen> {
       case 3:
         return VisitorProfilScreen(key: ValueKey(3));
       case 4:
-        return PraticienAllArticleScreen(key: ValueKey(3));
+        return VisiteurAllArticleScreen(key: ValueKey(3));
       case 5: 
         return VisiteurConsultationScreen(key: ValueKey(4));
       default:

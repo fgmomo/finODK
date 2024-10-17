@@ -46,13 +46,20 @@ class MaladieService {
     return maladiesCollection.doc(MaladieId).delete();
   }
 
-  // Mettre à jour un remède
+  // Mettre à jour une maladie
   Future<void> updateMaladie(DocumentReference docRef, Maladie Maladie) async {
     await docRef.update(Maladie.toMap());
   }
 
-  // Récupérer tous les remèdes
+  // Récupérer toutes les maladies
   Stream<QuerySnapshot> getMaladies() {
     return maladiesCollection.snapshots(); 
+  }
+
+
+  // Récupérer toutes les maladies en tant que liste
+  Future<List<Maladie>> fetchMaladies() async {
+    final snapshot = await maladiesCollection.get();
+    return snapshot.docs.map((doc) => Maladie.fromDocument(doc)).toList();
   }
 }

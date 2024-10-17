@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:meditra/config/config.dart';
 import 'package:meditra/sevices/consultation_service.dart';
+import 'package:meditra/sevices/maladie_service.dart';
+import 'package:meditra/sevices/plante_service.dart';
+import 'package:meditra/views/home/centres.dart';
 import 'package:meditra/views/home/consultation_approuve.dart';
+import 'package:meditra/views/home/detail_plante.dart';
+import 'package:meditra/views/home/remede.dart';
 import 'package:meditra/views/home/visiteur_consultation_all.dart';
 import 'package:meditra/views/home_praticien/DiscussionPage.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class VisitorHomeScreen extends StatefulWidget {
   const VisitorHomeScreen({Key? key}) : super(key: key);
@@ -15,6 +22,80 @@ class VisitorHomeScreen extends StatefulWidget {
 class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
   final ConsultationService _consultationService = ConsultationService();
   Future<Map<String, dynamic>?>? _futureConsultation;
+  final MaladieService _maladieService = MaladieService();
+  Future<List<Maladie>>? _futureMaladies; // Liste de maladies
+  List<Map<String, dynamic>> filteredPlantes = [];
+  List<Map<String, dynamic>> allPlantes = [];
+
+  // fetch all the plantes here
+  Future<void> _fetchPlantes() async {
+    final QuerySnapshot result =
+        await FirebaseFirestore.instance.collection('plantes').get();
+    allPlantes =
+        result.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+    filteredPlantes = allPlantes;
+  }
+
+  void _searchPlantes(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        filteredPlantes = allPlantes;
+      } else {
+        final suggestions = allPlantes.where((plante) {
+          final planteName = plante['nom']?.toLowerCase() ?? '';
+          final input = query.toLowerCase();
+          return planteName.contains(input);
+        }).toList();
+        filteredPlantes = suggestions;
+      }
+    });
+  }
+
+  Widget _buildShimmerEffect() {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(15),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 15,
+        mainAxisSpacing: 15,
+        childAspectRatio: 0.75,
+      ),
+      itemCount: 6, // Nombre d'éléments de shimmer
+      itemBuilder: (context, index) {
+        return Shimmer.fromColors(
+          baseColor: Colors.grey[300]!,
+          highlightColor: Colors.grey[100]!,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.grey[200], // Couleur de fond pour le shimmer
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: Container(
+                    color: Colors.grey[200], // Couleur de fond pour le shimmer
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Container(
+                    height: 20, // Hauteur fixe pour le texte
+                    color: Colors.grey[200], // Couleur de fond pour le shimmer
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+//----------------------------------------------------------------
 
   @override
   void initState() {
@@ -22,6 +103,7 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
     // Appel pour récupérer la dernière consultation approuvée
     _futureConsultation =
         _consultationService.fetchDerniereConsultationAppVisiteur();
+    _futureMaladies = _maladieService.fetchMaladies();
   }
 
   @override
@@ -71,7 +153,10 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
           ),
         ),
       ),
+      //----------------------------------------------------------------
       backgroundColor: Colors.white,
+      //--- body
+
       body: Padding(
         padding: const EdgeInsets.all(20.3),
         child: SingleChildScrollView(
@@ -95,8 +180,7 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) =>
-                              VisiteurConsultationAllScreen(),
+                          builder: (context) => VisiteurConsultationAllScreen(),
                         ),
                       );
                     },
@@ -284,9 +368,243 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
                   }
                 },
               ),
-              SizedBox(height: 5),
+              ////////////////////////////////////////////////////////////////
+              SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Explorer les maladies',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontFamily: policeLato,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RemedeScreen(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      'Voir tout',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontFamily: policeLato,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+////////////////////////////////////////////////////////////////
+              FutureBuilder<List<Maladie>>(
+                future: _futureMaladies, // Récupérer la liste des maladies
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(
+                        child:
+                            CircularProgressIndicator()); // Loader pendant le chargement
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Erreur : ${snapshot.error}'));
+                  } else if (snapshot.hasData) {
+                    var maladies = snapshot.data!;
+                    return SizedBox(
+                      height: 100,
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                            left: 0), // Supprimez l'espace à gauche
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: maladies.length, // Nombre de maladies
+                          itemBuilder: (context, index) {
+                            return Container(
+                              width: 100,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color:
+                                          couleurSecondaire, // Couleur de fond de l'icône
+                                    ),
+                                    padding: EdgeInsets.all(15),
+                                    child: Icon(
+                                      Icons
+                                          .local_hospital_rounded, // Icône représentant la maladie
+                                      size: 30,
+                                      color:
+                                          couleurPrincipale, // Couleur de l'icône
+                                    ),
+                                  ),
+                                  SizedBox(height: 5),
+                                  Text(
+                                    maladies[index].nom, // Nom de la maladie
+                                    style: TextStyle(
+                                      color: Colors.black, // Couleur du texte
+                                      fontFamily: policePoppins,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  } else {
+                    return Center(child: Text('Aucune maladie trouvée.'));
+                  }
+                },
+              ),
 
-              // Section Explorez nos remèdes, etc...
+              //----------------------------------------------------------------
+              // Section Explorez nos plantes
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Nos plantes',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontFamily: policeLato,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                        Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CentrePharmasScreen(),
+                        ),
+                      );
+                      
+                    },
+                    child: Text(
+                      'Voir tout',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontFamily: policeLato,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              //----------------------------------------------------------------
+            FutureBuilder<void>(
+  future: _fetchPlantes(),
+  builder: (context, snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      print("Loading..."); // Pour déboguer
+      return _buildShimmerEffect(); // Utilisation du shimmer pendant le chargement
+    } else if (snapshot.hasError) {
+      print("Error: ${snapshot.error}"); // Pour déboguer
+      return const Center(child: Text('Erreur de chargement'));
+    } else {
+      return SizedBox(
+        height: 180, // Ajuste la hauteur en fonction de la taille des cartes
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal, // Défilement horizontal
+          itemCount: filteredPlantes.length,
+          itemBuilder: (context, index) {
+            final plante = filteredPlantes[index];
+            bool isLoadingImage = true;
+
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DetailPlanteScreen(
+                      nomPlante: plante['nom']!,
+                      nomLocal: plante['nom_local'] ?? '',
+                      imagePlante: plante['image']!,
+                      description: plante['description'],
+                      bienfaits: plante['bienfaits'],
+                    ),
+                  ),
+                );
+              },
+              child: Container(
+                width: 150, // Ajuste la largeur des cartes
+                margin: const EdgeInsets.symmetric(horizontal: 10), // Espace entre les cartes
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  color: Colors.white,
+                  elevation: 1.0,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: Stack(
+                          children: [
+                            if (isLoadingImage)
+                              Shimmer.fromColors(
+                                baseColor: Colors.grey[300]!,
+                                highlightColor: Colors.grey[100]!,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[200],
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                            Image.network(
+                              plante['image']!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              loadingBuilder: (BuildContext context,
+                                  Widget child,
+                                  ImageChunkEvent? loadingProgress) {
+                                if (loadingProgress == null) {
+                                  isLoadingImage = false;
+                                  return child;
+                                } else {
+                                  return const SizedBox();
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Text(
+                          plante['nom']!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: policePoppins,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    }
+  },
+)
             ],
           ),
         ),
