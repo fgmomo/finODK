@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:meditra/config/config.dart';
+import 'package:meditra/sevices/centres_pharma_service.dart';
 import 'package:meditra/sevices/consultation_service.dart';
 import 'package:meditra/sevices/maladie_service.dart';
 import 'package:meditra/sevices/plante_service.dart';
+import 'package:meditra/views/home/DetailsCentre.dart';
 import 'package:meditra/views/home/centres.dart';
 import 'package:meditra/views/home/consultation_approuve.dart';
 import 'package:meditra/views/home/detail_plante.dart';
+import 'package:meditra/views/home/plante.dart';
 import 'package:meditra/views/home/remede.dart';
 import 'package:meditra/views/home/visiteur_consultation_all.dart';
 import 'package:meditra/views/home_praticien/DiscussionPage.dart';
@@ -27,6 +30,12 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
   List<Map<String, dynamic>> filteredPlantes = [];
   List<Map<String, dynamic>> allPlantes = [];
 
+   List<Map<String, dynamic>> centres = []; // Stocker les centres récupérés
+  bool isLoading = true; // Pour afficher un indicateur de chargement
+  String searchQuery = ""; // Pour stocker la requête de recherche
+  // Initialiser le service
+  final CentreService centreService = CentreService();
+
   // fetch all the plantes here
   Future<void> _fetchPlantes() async {
     final QuerySnapshot result =
@@ -36,6 +45,21 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
     filteredPlantes = allPlantes;
   }
 
+Future<void> _loadCentres() async {
+    try {
+      List<Map<String, dynamic>> loadedCentres =
+          await centreService.recupererCentresPharmacopee();
+      setState(() {
+        centres = loadedCentres;
+        isLoading = false;
+      });
+    } catch (e) {
+      print("Erreur lors du chargement des centres: $e");
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
   void _searchPlantes(String query) {
     setState(() {
       if (query.isEmpty) {
@@ -62,7 +86,7 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
         mainAxisSpacing: 15,
         childAspectRatio: 0.75,
       ),
-      itemCount: 6, // Nombre d'éléments de shimmer
+      itemCount: 2, // Nombre d'éléments de shimmer
       itemBuilder: (context, index) {
         return Shimmer.fromColors(
           baseColor: Colors.grey[300]!,
@@ -167,7 +191,7 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Ma consultation actuelle',
+                      'Ma consultation en cours',
                       style: TextStyle(
                         fontSize: 15,
                         fontFamily: policeLato,
@@ -429,27 +453,39 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color:
-                                          couleurSecondaire, // Couleur de fond de l'icône
-                                    ),
-                                    padding: EdgeInsets.all(15),
-                                    child: Icon(
-                                      Icons
-                                          .local_hospital_rounded, // Icône représentant la maladie
-                                      size: 30,
-                                      color:
-                                          couleurPrincipale, // Couleur de l'icône
+                                  InkWell(
+                                    onTap: () {
+                                      // Action à exécuter lors du clic sur l'icône
+                                      print("Icône cliquée !");
+                                    },
+                                    borderRadius: BorderRadius.circular(
+                                        50), // Garde l'effet rond sur l'icône
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color:
+                                            couleurSecondaire, // Couleur de fond de l'icône
+                                      ),
+                                      padding: EdgeInsets.all(15),
+                                      child: Icon(
+                                        Icons
+                                            .local_hospital_rounded, // Icône représentant la maladie
+                                        size: 30,
+                                        color:
+                                            couleurPrincipale, // Couleur de l'icône
+                                      ),
                                     ),
                                   ),
                                   SizedBox(height: 5),
                                   Text(
                                     maladies[index].nom, // Nom de la maladie
+                                    textAlign: TextAlign
+                                        .center, // Aligne le texte au centre
                                     style: TextStyle(
                                       color: Colors.black, // Couleur du texte
                                       fontFamily: policePoppins,
+                                      fontWeight: FontWeight
+                                          .w500, // Ajoute du poids au texte
                                     ),
                                   ),
                                 ],
@@ -481,13 +517,12 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
                   ),
                   TextButton(
                     onPressed: () {
-                        Navigator.push(
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => CentrePharmasScreen(),
+                          builder: (context) => PlanteScreen(),
                         ),
                       );
-                      
                     },
                     child: Text(
                       'Voir tout',
@@ -503,108 +538,245 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
               ),
 
               //----------------------------------------------------------------
-            FutureBuilder<void>(
-  future: _fetchPlantes(),
-  builder: (context, snapshot) {
-    if (snapshot.connectionState == ConnectionState.waiting) {
-      print("Loading..."); // Pour déboguer
-      return _buildShimmerEffect(); // Utilisation du shimmer pendant le chargement
-    } else if (snapshot.hasError) {
-      print("Error: ${snapshot.error}"); // Pour déboguer
-      return const Center(child: Text('Erreur de chargement'));
-    } else {
-      return SizedBox(
-        height: 180, // Ajuste la hauteur en fonction de la taille des cartes
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal, // Défilement horizontal
-          itemCount: filteredPlantes.length,
-          itemBuilder: (context, index) {
-            final plante = filteredPlantes[index];
-            bool isLoadingImage = true;
+              FutureBuilder<void>(
+                future: _fetchPlantes(),
+                builder: (context, snapshot) {
+                  
+                    return SizedBox(
+                      height:
+                          180, // Ajuste la hauteur en fonction de la taille des cartes
+                      child: ListView.builder(
+                        scrollDirection:
+                            Axis.horizontal, // Défilement horizontal
+                        itemCount: filteredPlantes.length,
+                        itemBuilder: (context, index) {
+                          final plante = filteredPlantes[index];
+                      
 
-            return GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DetailPlanteScreen(
-                      nomPlante: plante['nom']!,
-                      nomLocal: plante['nom_local'] ?? '',
-                      imagePlante: plante['image']!,
-                      description: plante['description'],
-                      bienfaits: plante['bienfaits'],
-                    ),
-                  ),
-                );
-              },
-              child: Container(
-                width: 150, // Ajuste la largeur des cartes
-                margin: const EdgeInsets.symmetric(horizontal: 10), // Espace entre les cartes
-                child: Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  color: Colors.white,
-                  elevation: 1.0,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            if (isLoadingImage)
-                              Shimmer.fromColors(
-                                baseColor: Colors.grey[300]!,
-                                highlightColor: Colors.grey[100]!,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[200],
-                                    borderRadius: BorderRadius.circular(10),
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => DetailPlanteScreen(
+                                    nomPlante: plante['nom']!,
+                                    nomLocal: plante['nom_local'] ?? '',
+                                    imagePlante: plante['image']!,
+                                    description: plante['description'],
+                                    bienfaits: plante['bienfaits'],
                                   ),
                                 ),
+                              );
+                            },
+                            child: Container(
+                              width: 150, // Ajuste la largeur des cartes
+                              margin: const EdgeInsets.symmetric(
+                                  horizontal: 10), // Espace entre les cartes
+                              child: Card(
+                               shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15), // Coins arrondis
+            ),
+                                color: Colors.white,
+                                elevation: 1.0,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Expanded(
+                                      child: Stack(
+                                        children: [
+                                          
+                                          Image.network(
+                                            plante['image']!,
+                                            fit: BoxFit.cover,
+                                            width: double.infinity,
+                                            height: double.infinity,
+                                            loadingBuilder:
+                                                (BuildContext context,
+                                                    Widget child,
+                                                    ImageChunkEvent?
+                                                        loadingProgress) {
+                                            
+                                                return child;
+                                              
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(10),
+                                      child: Text(
+                                        plante['nom']!,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontFamily: policePoppins,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            Image.network(
-                              plante['image']!,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                              loadingBuilder: (BuildContext context,
-                                  Widget child,
-                                  ImageChunkEvent? loadingProgress) {
-                                if (loadingProgress == null) {
-                                  isLoadingImage = false;
-                                  return child;
-                                } else {
-                                  return const SizedBox();
-                                }
-                              },
                             ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Text(
-                          plante['nom']!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontFamily: policePoppins,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
+                    );
+                  
+                },
+              ),
+
+
+
+
+            //-----------CENTRE PAGE-----------------------------------------------------
+              // Section Explorez nos plantes
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Explorez nos centres',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontFamily: policeLato,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CentrePharmasScreen(),
                         ),
+                      );
+                    },
+                    child: Text(
+                      'Voir tout',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontFamily: policeLato,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              //----------------------------------------------------------------
+              FutureBuilder<void>(
+                future: _loadCentres(),
+                builder: (context, snapshot) {
+                 
+                    return SizedBox(
+  height: 200, // Ajuste la hauteur pour s'adapter à la taille des cartes
+  child: ListView.builder(
+    scrollDirection: Axis.horizontal, // Défilement horizontal
+    itemCount: centres.length,
+    itemBuilder: (context, index) {
+      final centre = centres[index];
+
+      return GestureDetector(
+        onTap: () {
+          // Action à effectuer lors du clic
+           Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DetailsCentre(centre: centre),
+                              ),
+                            );
+        },
+        child: Container(
+          width: 160, // Ajuste la largeur des cartes
+          margin: const EdgeInsets.symmetric(horizontal: 10), // Espace entre les cartes
+          child: Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15), // Coins arrondis
+            ),
+            color: Colors.white,
+            elevation: 2.0, // Élévation pour un effet d'ombre
+            shadowColor: Colors.grey.withOpacity(0.8), // Ombre plus subtile
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Image en haut avec un léger arrondi
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(15),
+                    ),
+                    child: Image.network(
+                      centre['image'],
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                      errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
+                        return Icon(Icons.error, color: Colors.red);
+                      },
+                    ),
+                  ),
+                ),
+                // Informations du centre : nom et adresse avec icônes et alignement à gauche
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start, // Alignement à gauche
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.business, size: 16, color: couleurPrincipale), // Icône pour le nom
+                          SizedBox(width: 5), // Espacement entre l'icône et le texte
+                          Expanded(
+                            child: Text(
+                              centre['nom'],
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14, // Taille un peu plus grande pour le nom
+                                color: couleurPrincipale, // Couleur légèrement atténuée
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4), // Espacement entre le nom et l'adresse
+                      Row(
+                        children: [
+                          Icon(Icons.location_on, size: 16, color: couleurPrincipale), // Icône pour l'adresse
+                          SizedBox(width: 5), // Espacement entre l'icône et le texte
+                          Expanded(
+                            child: Text(
+                              centre['adresse'],
+                              style: const TextStyle(
+                                fontFamily: policeLato,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12, // Taille plus petite pour l'adresse
+                                color: couleurPrincipale, // Couleur grise pour différencier visuellement
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-              ),
-            );
-          },
+              ],
+            ),
+          ),
         ),
       );
-    }
-  },
-)
+    },
+  ),
+);
+                  
+                },
+              )
+
+
             ],
           ),
         ),

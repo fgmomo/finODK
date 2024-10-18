@@ -39,6 +39,15 @@ class _DetailsCentreState extends State<DetailsCentre> {
     currentLocation = await location.getLocation();
     setState(() {});
   }
+  void _callPhoneNumber(String phoneNumber) async {
+  final telUrl = 'tel:$phoneNumber';
+  if (await canLaunch(telUrl)) {
+    await launch(telUrl);
+  } else {
+    throw 'Impossible d\'ouvrir le numéro $phoneNumber';
+  }
+}
+
 
   // Méthode pour ouvrir Google Maps avec itinéraire
  void _openMap() async {
@@ -65,7 +74,7 @@ class _DetailsCentreState extends State<DetailsCentre> {
   }
 
 
-  @override
+   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
@@ -73,8 +82,26 @@ class _DetailsCentreState extends State<DetailsCentre> {
         backgroundColor: Colors.white,
         appBar: AppBar(
           backgroundColor: Colors.white,
-          title: Text(widget.centre['nom']),
+          elevation: 0, // Retirer l'ombre sous l'appBar pour un look minimaliste
+          title: Text(
+            widget.centre['nom'],
+            style: TextStyle(
+              color: couleurPrincipale,
+              fontFamily: policePoppins,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          iconTheme: IconThemeData(color: couleurPrincipale),
           bottom: TabBar(
+            indicatorColor: couleurPrincipale, 
+            labelColor: couleurPrincipale,
+            unselectedLabelColor: Colors.grey,
+            labelStyle: TextStyle(
+              fontFamily: policePoppins, 
+              fontSize: 16, 
+              fontWeight: FontWeight.w600,
+            ),
             tabs: [
               Tab(text: 'Détails'),
               Tab(text: 'Contact'),
@@ -83,52 +110,116 @@ class _DetailsCentreState extends State<DetailsCentre> {
         ),
         body: TabBarView(
           children: [
+            // Contenu de la première vue (Détails)
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: ListView(
                 children: [
-                  // Afficher l'image du centre
+                  // Image avec un petit effet d'ombre et des coins arrondis
                   Center(
-                    child: Image.network(
-                      widget.centre['image'],
-                      height: 200,
-                      fit: BoxFit.cover,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 2,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.network(
+                          widget.centre['image'],
+                          height: 200,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(height: 20),
+                  // Nom du centre avec un style distinct
                   Text(
                     widget.centre['nom'],
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: couleurPrincipale,
+                    ),
                   ),
                   SizedBox(height: 10),
-                  Text(
-                    'Adresse: ${widget.centre['adresse']}',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Description: ${widget.centre['description']}',
-                    style: TextStyle(fontSize: 18),
+                  // Adresse du centre
+                  Row(
+                    children: [
+                      Icon(Icons.location_pin, color: couleurPrincipale),
+                      SizedBox(width: 5),
+                      Expanded(
+                        child: Text(
+                          widget.centre['adresse'],
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      ),
+                    ],
                   ),
                   SizedBox(height: 20),
-                  // Boutons pour suivre l'itinéraire et appeler
+                  // Description
+                  Text(
+                    'Description:',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: couleurPrincipale,
+                    ),
+                  ),
+                  SizedBox(height: 5),
+                  Text(
+                    widget.centre['description'],
+                    style: TextStyle(fontSize: 18),
+                    textAlign: TextAlign.justify,
+                  ),
+                  SizedBox(height: 20),
+                  // Boutons d'actions
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       ElevatedButton.icon(
                         onPressed: _openMap,
-                        icon: Icon(Icons.directions,color: Colors.white,),
-                        label: Text('Itinéraire',style: TextStyle(color: Colors.white),),
+                        icon: Icon(Icons.directions, color: Colors.white),
+                        label: Text('Itinéraire', style: TextStyle(color: Colors.white,fontFamily: policePoppins)),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: couleurPrincipale, // Couleur personnalisée
+                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          backgroundColor: couleurPrincipale,
                         ),
                       ),
+                      //   ElevatedButton.icon(
+                      //   onPressed: _openMap,
+                      //   icon: Icon(Icons.message_sharp, color: Colors.white),
+                      //   label: Text('SMS', style: TextStyle(color: Colors.white,fontFamily: policePoppins)),
+                      //   style: ElevatedButton.styleFrom(
+                      //     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      //     shape: RoundedRectangleBorder(
+                      //       borderRadius: BorderRadius.circular(10),
+                      //     ),
+                      //     backgroundColor: couleurPrincipale,
+                      //   ),
+                      // ),
                       ElevatedButton.icon(
-                        onPressed: (){},
-                        icon: Icon(Icons.phone,color: Colors.white,),
-                        label: Text('Appeler',style: TextStyle(color: Colors.white),),
+                        onPressed: (){
+                            _callPhoneNumber(widget.centre['telephone']);
+                        },
+                        icon: Icon(Icons.phone, color: Colors.white),
+                        label: Text('Appeler', style: TextStyle(color: Colors.white,fontFamily: policePoppins)),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: couleurPrincipale, // Couleur personnalisée
+                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          backgroundColor: couleurPrincipale,
                         ),
                       ),
                     ],
@@ -136,24 +227,55 @@ class _DetailsCentreState extends State<DetailsCentre> {
                 ],
               ),
             ),
+            // Contenu de la deuxième vue (Contact)
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Téléphone: ${widget.centre['telephone']}',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    'Contactez-nous',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: couleurPrincipale,
+                    ),
                   ),
                   SizedBox(height: 20),
-                  Text(
-                    'Email: ${widget.centre['email'] ?? "Non spécifié"}',
-                    style: TextStyle(fontSize: 18),
+                  // Téléphone
+                  Row(
+                    children: [
+                      Icon(Icons.phone, color: couleurPrincipale),
+                      SizedBox(width: 10),
+                      Text(
+                        'Téléphone: ${widget.centre['telephone']}',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ],
                   ),
                   SizedBox(height: 20),
-                  Text(
-                    'Site Web: ${widget.centre['siteWeb'] ?? "Non spécifié"}',
-                    style: TextStyle(fontSize: 18),
+                  // Email
+                  Row(
+                    children: [
+                      Icon(Icons.email, color: couleurPrincipale),
+                      SizedBox(width: 10),
+                      Text(
+                        'Email: ${widget.centre['email'] ?? "Non spécifié"}',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  // Site Web
+                  Row(
+                    children: [
+                      Icon(Icons.web, color: couleurPrincipale),
+                      SizedBox(width: 10),
+                      Text(
+                        'Site Web: ${widget.centre['siteWeb'] ?? "Non spécifié"}',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -163,4 +285,5 @@ class _DetailsCentreState extends State<DetailsCentre> {
       ),
     );
   }
+
 }
