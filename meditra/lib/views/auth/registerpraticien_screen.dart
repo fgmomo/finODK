@@ -377,6 +377,7 @@ class _RegisterPraticienScreenState extends State<RegisterPraticienScreen> {
       'justification': justificationController.text,
       'photoUrl': photoUrl, 
       'justificatifUrl': justificatifUrl,
+      'isActive': true,
       'role': 'praticien', // Initialisation du rôle
       'status': 'en attente', // Initialisation du statut
     });

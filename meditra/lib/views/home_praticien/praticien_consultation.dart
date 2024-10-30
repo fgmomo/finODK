@@ -36,20 +36,7 @@ class _PraticienConsultationScreenState
               ),
             ],
           ),
-          actions: [
-            IconButton(
-              icon: const Icon(
-                Icons.notifications,
-                color: couleurPrincipale,
-                size: 35,
-              ),
-              onPressed: () {
-                // Logique de notification
-              },
-              padding: const EdgeInsets.all(10),
-              tooltip: 'Notifications',
-            ),
-          ],
+          
           bottom: const PreferredSize(
             preferredSize: Size.fromHeight(1.0),
             child: Divider(

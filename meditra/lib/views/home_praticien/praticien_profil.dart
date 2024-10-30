@@ -6,16 +6,17 @@ import 'package:meditra/views/auth/login_screen.dart';
 import 'package:meditra/views/home/notification.dart';
 import 'package:meditra/views/home/politique.dart';
 import 'package:meditra/views/home/visiteur_edit_profil.dart';
+import 'package:meditra/views/home_praticien/praticien_edit_profil.dart';
 import 'package:shimmer/shimmer.dart'; // Ajoute cette ligne pour utiliser Shimmer
 
-class VisitorProfilScreen extends StatefulWidget {
-  const VisitorProfilScreen({super.key});
+class PraticienProfilScreen extends StatefulWidget {
+  const PraticienProfilScreen({super.key});
 
   @override
-  State<VisitorProfilScreen> createState() => _VisitorProfilScreenState();
+  State<PraticienProfilScreen> createState() => _PraticienProfilScreenState();
 }
 
-class _VisitorProfilScreenState extends State<VisitorProfilScreen> {
+class _PraticienProfilScreenState extends State<PraticienProfilScreen> {
   String firstname = '';
   String lastname = '';
   String email = '';
@@ -48,7 +49,7 @@ class _VisitorProfilScreenState extends State<VisitorProfilScreen> {
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
-            .collection('visiteurs')
+            .collection('praticiens')
             .doc(user?.uid)
             .snapshots(), // Écoutez les mises à jour du document
         builder: (context, snapshot) {
@@ -71,7 +72,7 @@ class _VisitorProfilScreenState extends State<VisitorProfilScreen> {
           email = user?.email ?? 'Email inconnu';
           role = visitorData['role'] ?? 'Role inconnu';
           profileImageUrl =
-              visitorData['profileImageUrl'] ?? ''; // URL de l'image de profil
+              visitorData['photoUrl'] ?? ''; // URL de l'image de profil
 
           return Column(
             children: [
@@ -154,7 +155,7 @@ class _VisitorProfilScreenState extends State<VisitorProfilScreen> {
                           context,
                           MaterialPageRoute(
                               builder: (context) =>
-                                  const VisitorEditProfilScreen()),
+                                  const PraticienEditProfilScreen()),
                         );
                       },
                     ),

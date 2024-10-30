@@ -1,21 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:meditra/config/config.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:meditra/sevices/admin_service.dart';
 class AddAdminModal extends StatefulWidget {
-  final Future<void> Function(String nom, String prenom, String email, String password) onAddAdmin;
-
-  const AddAdminModal({Key? key, required this.onAddAdmin}) : super(key: key);
-
+ final VoidCallback onAdminAdded; // Déclarez le paramètre de callback
+  const AddAdminModal({Key? key, required this.onAdminAdded}) : super(key: key);
   @override
   _AddAdminModalState createState() => _AddAdminModalState();
 }
 
 class _AddAdminModalState extends State<AddAdminModal> {
   final _formKey = GlobalKey<FormState>();
+  final AdminService _adminService = AdminService();
+
   String _nom = '';
   String _prenom = '';
   String _email = '';
   String _password = '';
-  String _errorMessage = ''; // Variable pour stocker les erreurs
+  String _errorMessage = '';
+
+void onAdminAdded() {
+    // Logique à exécuter après l'ajout d'un administrateur
+    // Par exemple, vous pouvez mettre à jour une liste d'administrateurs, afficher un message, etc.
+    print("Un administrateur a été ajouté avec succès !");
+    // Vous pouvez aussi appeler setState si cela concerne l'état de l'UI
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,12 +35,11 @@ class _AddAdminModalState extends State<AddAdminModal> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Afficher l'erreur en haut du modal
             if (_errorMessage.isNotEmpty)
               Container(
                 padding: EdgeInsets.all(8),
                 margin: EdgeInsets.only(bottom: 10),
-                color: Colors.red[100], // Couleur de fond pour l'erreur
+                color: Colors.red[100],
                 child: Row(
                   children: [
                     Icon(Icons.error, color: Colors.red),
@@ -48,10 +56,10 @@ class _AddAdminModalState extends State<AddAdminModal> {
             TextFormField(
               decoration: InputDecoration(
                 labelText: 'Nom',
-                border: OutlineInputBorder( // Bordure fermée
-                  borderRadius: BorderRadius.circular(10), // Radius des coins
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 12), // Paddings
+                contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -59,15 +67,13 @@ class _AddAdminModalState extends State<AddAdminModal> {
                 }
                 return null;
               },
-              onSaved: (value) {
-                _nom = value!;
-              },
+              onSaved: (value) => _nom = value ?? '',
             ),
-            SizedBox(height: 10), // Espacement entre les champs
+            SizedBox(height: 10),
             TextFormField(
               decoration: InputDecoration(
                 labelText: 'Prénom',
-                border: OutlineInputBorder( // Bordure fermée
+                border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
                 contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
@@ -78,9 +84,7 @@ class _AddAdminModalState extends State<AddAdminModal> {
                 }
                 return null;
               },
-              onSaved: (value) {
-                _prenom = value!;
-              },
+              onSaved: (value) => _prenom = value ?? '',
             ),
             SizedBox(height: 10),
             TextFormField(
@@ -95,11 +99,12 @@ class _AddAdminModalState extends State<AddAdminModal> {
                 if (value == null || value.isEmpty) {
                   return 'Veuillez entrer un email';
                 }
+                if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                  return 'Veuillez entrer un email valide';
+                }
                 return null;
               },
-              onSaved: (value) {
-                _email = value!;
-              },
+              onSaved: (value) => _email = value ?? '',
             ),
             SizedBox(height: 10),
             TextFormField(
@@ -110,16 +115,17 @@ class _AddAdminModalState extends State<AddAdminModal> {
                 ),
                 contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
               ),
-              obscureText: true, // Masquer le mot de passe
+              obscureText: true,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Veuillez entrer un mot de passe';
                 }
+                if (value.length < 6) {
+                  return 'Le mot de passe doit contenir au moins 6 caractères';
+                }
                 return null;
               },
-              onSaved: (value) {
-                _password = value!;
-              },
+              onSaved: (value) => _password = value ?? '',
             ),
           ],
         ),
@@ -127,7 +133,7 @@ class _AddAdminModalState extends State<AddAdminModal> {
       actions: [
         TextButton(
           onPressed: () {
-            Navigator.of(context).pop(); // Ferme le modal
+            Navigator.of(context).pop();
           },
           child: Text(
             'Annuler',
@@ -139,28 +145,30 @@ class _AddAdminModalState extends State<AddAdminModal> {
         ),
         ElevatedButton(
           onPressed: () async {
-            setState(() {
-              _errorMessage = ''; // Réinitialiser le message d'erreur
-            });
-
-            if (_formKey.currentState!.validate()) {
-              _formKey.currentState!.save();
+            if (_formKey.currentState?.validate() ?? false) {
+              _formKey.currentState?.save();
               try {
-                await widget.onAddAdmin(_nom, _prenom, _email, _password); // Attendre la réponse
-                Navigator.of(context).pop(); // Fermer le modal si succès
+                await _adminService.ajouterAdmin(
+                  email: _email,
+                  password: _password,
+                  nom: _nom,
+                  prenom: _prenom,
+                );
+                Navigator.of(context).pop();
+                 onAdminAdded(); 
               } catch (e) {
                 setState(() {
-                  _errorMessage = e.toString(); // Afficher l'erreur dans le modal
+                  _errorMessage = e.toString();
                 });
               }
             }
           },
           style: ElevatedButton.styleFrom(
             foregroundColor: Colors.white,
-            backgroundColor: couleurPrincipale, // Couleur du texte
-            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20), // Padding du bouton
+            backgroundColor: couleurPrincipale,
+            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(5), // Définit un radius circulaire de 5
+              borderRadius: BorderRadius.circular(5),
             ),
           ),
           child: Text(

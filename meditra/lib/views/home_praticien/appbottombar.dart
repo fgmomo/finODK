@@ -28,11 +28,11 @@ class CustomBottomNavigationBarPraticien extends StatelessWidget {
         ),
       
         BottomNavigationBarItem(
-          icon: Icon(Icons.article),
+          icon: Icon(Icons.local_pharmacy),
           label: '', // Label vide
         ),
           BottomNavigationBarItem(
-          icon: Icon(Icons.grass),
+          icon: Icon(Icons.description),
           label: '', // Label vide
         ),
         BottomNavigationBarItem(

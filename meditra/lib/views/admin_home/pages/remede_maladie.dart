@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:meditra/config/config.dart';
 import 'package:meditra/sevices/remede_maladie_service.dart';
+import 'package:meditra/views/admin_home/pages/assoc_reme_maladie__modal.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RemedeMaladiePage extends StatefulWidget {
   const RemedeMaladiePage({super.key});
@@ -15,46 +18,66 @@ class _RemedeMaladiePageState extends State<RemedeMaladiePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 245, 245, 245),
-      appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 245, 245, 245),
-        elevation: 0,
+      backgroundColor: Colors.grey[200],
+     appBar: AppBar(
+      scrolledUnderElevation: 0,
+      // elevation: 0,
+        backgroundColor: Colors.grey[200],
         title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Remèdes par Maladie',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                color: Colors.black,
-                fontSize: 20,
+            Text('Liste des Rémèdes par maladie',
+                style: TextStyle(fontFamily: policePoppins)),
+            SizedBox(width: 10),
+            TextButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return RemedeMaladieModal();
+                  },
+                );
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: couleurPrincipale,
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(7),
+                ),
+              ),
+              child: Text(
+                'Associer un rémède à une maladie',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: policePoppins,
+                ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(right: 20.0),
-              child: SizedBox(
-                width: 250,
-                child: TextField(
-                  onChanged: (value) {
+            const Spacer(),
+            SizedBox(
+              width: 200,
+              child: TextField(
+                onChanged: (value) {
                     setState(() {
                       searchQuery = value.toLowerCase();
                     });
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'Rechercher...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(3),
-                      borderSide: BorderSide.none,
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
+                },
+                decoration: InputDecoration(
+                  hintText: "Rechercher...",
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
                   ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding:
+                      EdgeInsets.symmetric(vertical: 0, horizontal: 10),
                 ),
               ),
             ),
           ],
         ),
+        automaticallyImplyLeading: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -84,75 +107,72 @@ class _RemedeMaladiePageState extends State<RemedeMaladiePage> {
               return Center(child: Text('Aucun résultat pour "$searchQuery"'));
             }
 
-            return Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 2,
-                    blurRadius: 5,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Table(
-                columnWidths: const {
-                  0: FlexColumnWidth(2), // Nom du remède
-                  1: FlexColumnWidth(2), // Maladie associée
-                  2: FlexColumnWidth(3), // Description
-                  3: FlexColumnWidth(2), // Utilisation
-                  4: FlexColumnWidth(3), // Image
-                  5: FlexColumnWidth(1), // Actions
-                },
-                children: [
-                  TableRow(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(10),
-                        topRight: Radius.circular(10),
-                      ),
-                    ),
-                    children: [
-                      _buildTableHeader('Nom Remède'),
-                      _buildTableHeader('Maladie Associée'),
-                      _buildTableHeader('Description Résumée'),
-                      _buildTableHeader('Utilisation'),
-                      _buildTableHeader('Image'),
-                      _buildTableHeader('Actions'),
-                    ],
-                  ),
-                  ...remedesMaladies.map((remedeMaladie) {
-                    final remede = remedeMaladie['remede'];
-                    final maladie = remedeMaladie['maladie'];
+          return Container(
+  decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(10),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.grey.withOpacity(0.1),
+        spreadRadius: 2,
+        blurRadius: 5,
+        offset: const Offset(0, 3),
+      ),
+    ],
+  ),
+  child: SingleChildScrollView( // Ajoutez ceci
+    scrollDirection: Axis.vertical, // Défilement vertical
+    child: Table(
+      columnWidths: const {
+        0: FlexColumnWidth(2), // Nom du remède
+        1: FlexColumnWidth(2), // Maladie associée
+        2: FlexColumnWidth(3), // Description
+        3: FlexColumnWidth(2), // Utilisation
+        4: FlexColumnWidth(3), // Image
+        5: FlexColumnWidth(1), // Actions
+      },
+      children: [
+        TableRow(
+          decoration: BoxDecoration(
+            color: Colors.grey[300],
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(10),
+              topRight: Radius.circular(10),
+            ),
+          ),
+          children: [
+            _buildTableHeader('Nom Remède'),
+            _buildTableHeader('Maladie Associée'),
+            _buildTableHeader('Description Résumée'),
+            _buildTableHeader('Utilisation'),
+            _buildTableHeader('Image'),
+            _buildTableHeader('Actions'),
+          ],
+        ),
+        ...remedesMaladies.map((remedeMaladie) {
+          final remede = remedeMaladie['remede'];
+          final maladie = remedeMaladie['maladie'];
 
-                    print(
-                        'Remede: ${remede['nom']}, Ref: ${remede['remede_ref']}');
-                    print(
-                        'Maladie: ${maladie['nom']}, Ref: ${maladie['maladie_ref']}');
-
-                    return TableRow(
-                      decoration: BoxDecoration(
-                        color: remedesMaladies.indexOf(remedeMaladie).isEven
-                            ? Colors.white
-                            : Colors.grey[100],
-                      ),
-                      children: [
-                        _buildTableCell(remede['nom']),
-                        _buildTableCell(maladie['nom']),
-                        _buildTableCell(
-                            _getShortDescription(remede['description'])),
-                        _buildTableCell(remede['utilisation']),
-                        _buildImageCell(remede['image']),
-                        _buildActionIcons(remede, maladie),
-                      ],
-                    );
-                  }).toList(),
-                ],
-              ),
-            );
+          return TableRow(
+            decoration: BoxDecoration(
+              color: remedesMaladies.indexOf(remedeMaladie).isEven
+                  ? Colors.white
+                  : Colors.grey[100],
+            ),
+            children: [
+              _buildTableCell(remede['nom']),
+              _buildTableCell(maladie['nom']),
+              _buildTableCell(_getShortDescription(remede['description'])),
+              _buildTableCell(remede['utilisation']),
+              _buildImageCell(remede['image']),
+              _buildActionIcons(remedeMaladie),
+            ],
+          );
+        }).toList(),
+      ],
+    ),
+  ),
+);
           },
         ),
       ),
@@ -197,20 +217,17 @@ class _RemedeMaladiePageState extends State<RemedeMaladiePage> {
   Widget _buildImageCell(String imageUrl) {
     return Padding(
       padding: const EdgeInsets.all(10.0),
-      child: Image.network(
-        imageUrl,
-        width: 50,
-        height: 50,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return const Icon(Icons.image_not_supported, color: Colors.grey);
-        },
+      child: CircleAvatar(
+        radius: 25,
+        backgroundImage: imageUrl != null && imageUrl.isNotEmpty
+            ? NetworkImage(
+                imageUrl,
+              ) // Affiche l'image de profil à partir de l'URL
+            : AssetImage('assets/prof.jpg'), // Image par défaut
       ),
     );
   }
-
-  Widget _buildActionIcons(
-      Map<String, dynamic> remede, Map<String, dynamic> maladie) {
+  Widget _buildActionIcons(Map<String, dynamic> remedeMaladie) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5.0),
       child: Row(
@@ -220,65 +237,238 @@ class _RemedeMaladiePageState extends State<RemedeMaladiePage> {
             child: IconButton(
               icon: const Icon(Icons.remove_red_eye, color: Colors.green),
               onPressed: () {
-                _showRemedeDetails(remede);
+                _showRemedeDetails(remedeMaladie['remede']);
               },
             ),
           ),
-          Flexible(
-            child: IconButton(
-              icon: const Icon(Icons.link_off, color: Colors.red),
-              onPressed: () async {
-                await _dissocierRemedeMaladie(remede, maladie);
-              },
-            ),
-          ),
+         Flexible(
+  child: IconButton(
+    icon: const Icon(Icons.link_off, color: Colors.red),
+    onPressed: () async {
+      bool? confirm = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Confirmation'),
+            content: const Text('Êtes-vous sûr de vouloir dissocier ce remède de cette maladie ?'),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Annuler'),
+                onPressed: () {
+                  Navigator.of(context).pop(false); // Ne pas dissocier
+                },
+              ),
+              TextButton(
+                child: const Text('Confirmer'),
+                onPressed: () {
+                  Navigator.of(context).pop(true); // Confirmer la dissociation
+                },
+              ),
+            ],
+          );
+        },
+      );
+
+      if (confirm == true) {
+        await _dissocierRemedeMaladie(remedeMaladie);
+      }
+    },
+  ),
+),
         ],
       ),
     );
   }
 
+
+
   Future<void> _showRemedeDetails(Map<String, dynamic> remede) async {
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text(remede['nom']),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Description : ${remede['description']}'),
-                const SizedBox(height: 10),
-                Text('Utilisation : ${remede['utilisation']}'),
-              ],
+       
+  return AlertDialog(
+          title:
+              Text(remede['nom'], style: TextStyle(fontFamily: policePoppins)),
+          content: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: 300,
+              maxHeight: 400,
+              minWidth: 300,
+              maxWidth: 500,
+            ),
+            child: SingleChildScrollView(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8.0),
+                    child: Image.network(
+                      remede['image'],
+                      width: 150,
+                      height: 150,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(Icons.broken_image, size: 150);
+                      },
+                    ),
+                  ),
+                  SizedBox(width: 20),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Nom du rémède', // Titre en gras
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            fontFamily: policePoppins,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          remede['nom'], // Contenu en dessous
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                            fontFamily: policePoppins,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+
+                        // Description
+                        Text(
+                          'Description', // Titre en gras
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            fontFamily: policePoppins,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          remede['description'], // Contenu en dessous
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                            fontFamily: policePoppins,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+
+                        // Utilisation
+                        Text(
+                          'Utilisation', // Titre en gras
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            fontFamily: policePoppins,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          remede['utilisation'], // Contenu en dessous
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                            fontFamily: policePoppins,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+
+                        // Précaution
+                        Text(
+                          'Précaution', // Titre en gras
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            fontFamily: policePoppins,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          remede['precaution'], // Contenu en dessous
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                            fontFamily: policePoppins,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+
+                        // Dosage
+                        Text(
+                          'Dosage', // Titre en gras
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            fontFamily: policePoppins,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          remede['dosage'], // Contenu en dessous
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                            fontFamily: policePoppins,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Fermer',
+                  style: TextStyle(
+                      color: Colors.green[700], fontFamily: policePoppins)),
+            ),
+          ],
         );
+
       },
     );
   }
 
- Future<void> _dissocierRemedeMaladie(
-    Map<String, dynamic> remede, Map<String, dynamic> maladie) async {
-  
-  print('Tentative de dissociation...');
-  final remedeRef = remede['remede_ref'] ?? 'Référence Remède Invalide';
-  final maladieRef = maladie['maladie_ref'] ?? 'Référence Maladie Invalide';
-  
-  print('Remede Ref: $remedeRef, Maladie Ref: $maladieRef');
+   Future<void> _dissocierRemedeMaladie(
+      Map<String, dynamic> remedeMaladie) async {
+    print('Tentative de dissociation...');
 
-  if (remede['remede_ref'] == null) {
-    print('Erreur: Remede Ref est null.');
-    return;
-  }
-  if (maladie['maladie_ref'] == null) {
-    print('Erreur: Maladie Ref est null.');
-    return;
-  }
+    // Récupérer les références des remèdes et maladies
+    final remedeRef = remedeMaladie['remede_ref'] as DocumentReference?;
+    final maladieRef = remedeMaladie['maladie_ref'] as DocumentReference?;
 
-  await _remedeMaladieService.dissocierRemedeMaladie(remedeRef, maladieRef);
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Le remède a été dissocié de la maladie.')),
-  );
-}
+    // Vérifiez si les références sont nulles
+    if (remedeRef == null) {
+      print('Erreur: Référence de remède est null.');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erreur: Référence de remède invalide.')),
+      );
+      return;
+    }
+
+    if (maladieRef == null) {
+      print('Erreur: Référence de maladie est null.');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erreur: Référence de maladie invalide.')),
+      );
+      return;
+    }
+
+    print('Remede Ref: $remedeRef, Maladie Ref: $maladieRef');
+
+    // Appel de la méthode pour dissocier
+    await _remedeMaladieService.dissocierRemedeMaladie(remedeMaladie);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Le remède a été dissocié de la maladie.')),
+    );
+  }
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:meditra/views/admin_home/pages/admin_page.dart';
 import 'package:meditra/views/admin_home/pages/maladie.dart';
+import 'package:meditra/views/admin_home/pages/pharmacope.dart';
 import 'package:meditra/views/admin_home/pages/plante.dart';
+import 'package:meditra/views/admin_home/pages/praticien.dart';
 import 'package:meditra/views/admin_home/pages/remede.dart';
 import 'package:meditra/views/admin_home/pages/remede_maladie.dart';
 import '../components/sidebar.dart';
@@ -19,12 +21,14 @@ class _MainLayoutState extends State<MainLayout> {
 
   final List<Widget> _pages = [
     HomePage(),
-    UserPage(),
-    AdminPage(),
     PlantePage(),
     RemedePage(),
     MaladiePage(),
     RemedeMaladiePage(),
+    PharmacopePage(),
+    PraticienPage(),
+    UserPage(),
+    AdminPage(),
   ];
 
   void _onItemTapped(int index) {

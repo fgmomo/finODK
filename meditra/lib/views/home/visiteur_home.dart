@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:meditra/config/config.dart';
 import 'package:meditra/sevices/centres_pharma_service.dart';
 import 'package:meditra/sevices/consultation_service.dart';
+import 'package:meditra/sevices/full_name_service.dart';
 import 'package:meditra/sevices/maladie_service.dart';
 import 'package:meditra/sevices/plante_service.dart';
 import 'package:meditra/views/home/DetailsCentre.dart';
@@ -29,12 +30,26 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
   Future<List<Maladie>>? _futureMaladies; // Liste de maladies
   List<Map<String, dynamic>> filteredPlantes = [];
   List<Map<String, dynamic>> allPlantes = [];
+  Future<void>? _futurePlantes;
+  Future<void>? _futureCentres;
 
-   List<Map<String, dynamic>> centres = []; // Stocker les centres récupérés
+  List<Map<String, dynamic>> centres = []; // Stocker les centres récupérés
   bool isLoading = true; // Pour afficher un indicateur de chargement
   String searchQuery = ""; // Pour stocker la requête de recherche
   // Initialiser le service
   final CentreService centreService = CentreService();
+
+  final FullNameService _fullName = FullNameService();
+  String? _praFullName;
+
+  Future<void> _fetchPraticienName() async {
+    var praData = await _fullName.recupererVisiteurConnecte();
+    if (praData != null) {
+      setState(() {
+        _praFullName = "${praData['firstName']} ${praData['lastName']}";
+      });
+    }
+  }
 
   // fetch all the plantes here
   Future<void> _fetchPlantes() async {
@@ -45,7 +60,7 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
     filteredPlantes = allPlantes;
   }
 
-Future<void> _loadCentres() async {
+  Future<void> _loadCentres() async {
     try {
       List<Map<String, dynamic>> loadedCentres =
           await centreService.recupererCentresPharmacopee();
@@ -60,64 +75,6 @@ Future<void> _loadCentres() async {
       });
     }
   }
-  void _searchPlantes(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        filteredPlantes = allPlantes;
-      } else {
-        final suggestions = allPlantes.where((plante) {
-          final planteName = plante['nom']?.toLowerCase() ?? '';
-          final input = query.toLowerCase();
-          return planteName.contains(input);
-        }).toList();
-        filteredPlantes = suggestions;
-      }
-    });
-  }
-
-  Widget _buildShimmerEffect() {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(15),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 15,
-        mainAxisSpacing: 15,
-        childAspectRatio: 0.75,
-      ),
-      itemCount: 2, // Nombre d'éléments de shimmer
-      itemBuilder: (context, index) {
-        return Shimmer.fromColors(
-          baseColor: Colors.grey[300]!,
-          highlightColor: Colors.grey[100]!,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.grey[200], // Couleur de fond pour le shimmer
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: Container(
-                    color: Colors.grey[200], // Couleur de fond pour le shimmer
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Container(
-                    height: 20, // Hauteur fixe pour le texte
-                    color: Colors.grey[200], // Couleur de fond pour le shimmer
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 
 //----------------------------------------------------------------
 
@@ -128,12 +85,17 @@ Future<void> _loadCentres() async {
     _futureConsultation =
         _consultationService.fetchDerniereConsultationAppVisiteur();
     _futureMaladies = _maladieService.fetchMaladies();
+    _futurePlantes = _fetchPlantes();
+    _futureCentres = _loadCentres();
+    _fetchPraticienName();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        // elevation: 0,
+        scrolledUnderElevation: 0,
         backgroundColor: Colors.white,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,7 +103,7 @@ Future<void> _loadCentres() async {
             Text(
               'Bienvenue,',
               style: TextStyle(
-                fontSize: 22,
+                fontSize: 20,
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
                 fontFamily: policeLato,
@@ -149,32 +111,14 @@ Future<void> _loadCentres() async {
             ),
             SizedBox(height: 2),
             Text(
-              'Aoua', // Nom du visiteur
+              '${_praFullName}', // Nom du visiteur
               style: TextStyle(
-                fontSize: 18,
+                fontFamily: policePoppins,
+                fontSize: 12,
                 color: Colors.black,
               ),
             ),
           ],
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.notifications,
-              color: couleurPrincipale,
-              size: 35,
-            ),
-            onPressed: () {},
-            padding: EdgeInsets.all(10),
-            tooltip: 'Notifications',
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(1.0),
-          child: Container(
-            color: Colors.black,
-            height: 0.2,
-          ),
         ),
       ),
       //----------------------------------------------------------------
@@ -228,8 +172,23 @@ Future<void> _loadCentres() async {
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(
-                        child:
-                            CircularProgressIndicator()); // Loader pendant le chargement
+                      // Shimmer effect pendant le chargement
+                      child: Shimmer.fromColors(
+                        baseColor:
+                            Colors.grey[300]!, // Couleur de base du shimmer
+                        highlightColor:
+                            Colors.grey[100]!, // Couleur de surbrillance
+                        child: Container(
+                          width: double.infinity,
+                          height: 150,
+                          margin: EdgeInsets.symmetric(horizontal: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ); // Loader pendant le chargement
                   } else if (snapshot.hasError) {
                     return Center(child: Text('Erreur : ${snapshot.error}'));
                   } else if (snapshot.hasData && snapshot.data != null) {
@@ -432,9 +391,52 @@ Future<void> _loadCentres() async {
                 future: _futureMaladies, // Récupérer la liste des maladies
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(
-                        child:
-                            CircularProgressIndicator()); // Loader pendant le chargement
+                    // Afficher un effet Shimmer pendant le chargement
+                    return SizedBox(
+                      height: 100,
+                      child: Padding(
+                        padding: EdgeInsets.only(left: 0),
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: 5, // Nombre d'éléments Shimmer à afficher
+                          itemBuilder: (context, index) {
+                            return Shimmer.fromColors(
+                              baseColor: Colors.grey[300]!,
+                              highlightColor: Colors.grey[100]!,
+                              child: Container(
+                                width: 100,
+                                margin: EdgeInsets.symmetric(horizontal: 8.0),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(100),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      width: 60,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.grey[
+                                            300], // Placeholder pour l'icône
+                                      ),
+                                    ),
+                                    SizedBox(height: 10),
+                                    Container(
+                                      width: 60,
+                                      height: 10,
+                                      color: Colors.grey[
+                                          300], // Placeholder pour le texte
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    );
                   } else if (snapshot.hasError) {
                     return Center(child: Text('Erreur : ${snapshot.error}'));
                   } else if (snapshot.hasData) {
@@ -442,8 +444,7 @@ Future<void> _loadCentres() async {
                     return SizedBox(
                       height: 100,
                       child: Padding(
-                        padding: EdgeInsets.only(
-                            left: 0), // Supprimez l'espace à gauche
+                        padding: EdgeInsets.only(left: 0),
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
                           itemCount: maladies.length, // Nombre de maladies
@@ -455,11 +456,9 @@ Future<void> _loadCentres() async {
                                 children: [
                                   InkWell(
                                     onTap: () {
-                                      // Action à exécuter lors du clic sur l'icône
                                       print("Icône cliquée !");
                                     },
-                                    borderRadius: BorderRadius.circular(
-                                        50), // Garde l'effet rond sur l'icône
+                                    borderRadius: BorderRadius.circular(50),
                                     child: Container(
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
@@ -479,13 +478,11 @@ Future<void> _loadCentres() async {
                                   SizedBox(height: 5),
                                   Text(
                                     maladies[index].nom, // Nom de la maladie
-                                    textAlign: TextAlign
-                                        .center, // Aligne le texte au centre
+                                    textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      color: Colors.black, // Couleur du texte
+                                      color: Colors.black,
                                       fontFamily: policePoppins,
-                                      fontWeight: FontWeight
-                                          .w500, // Ajoute du poids au texte
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ],
@@ -500,7 +497,6 @@ Future<void> _loadCentres() async {
                   }
                 },
               ),
-
               //----------------------------------------------------------------
               // Section Explorez nos plantes
               Row(
@@ -539,99 +535,151 @@ Future<void> _loadCentres() async {
 
               //----------------------------------------------------------------
               FutureBuilder<void>(
-                future: _fetchPlantes(),
+                future: _futurePlantes,
                 builder: (context, snapshot) {
-                  
-                    return SizedBox(
-                      height:
-                          180, // Ajuste la hauteur en fonction de la taille des cartes
-                      child: ListView.builder(
-                        scrollDirection:
-                            Axis.horizontal, // Défilement horizontal
-                        itemCount: filteredPlantes.length,
-                        itemBuilder: (context, index) {
-                          final plante = filteredPlantes[index];
-                      
-
-                          return GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => DetailPlanteScreen(
-                                    nomPlante: plante['nom']!,
-                                    nomLocal: plante['nom_local'] ?? '',
-                                    imagePlante: plante['image']!,
-                                    description: plante['description'],
-                                    bienfaits: plante['bienfaits'],
+                  return SizedBox(
+                    height:
+                        180, // Ajuste la hauteur en fonction de la taille des cartes
+                    child: snapshot.connectionState == ConnectionState.waiting
+                        ? ListView.builder(
+                            scrollDirection:
+                                Axis.horizontal, // Défilement horizontal
+                            itemCount: 3, // Nombre de cartes shimmer à afficher
+                            itemBuilder: (context, index) {
+                              return Shimmer.fromColors(
+                                baseColor: Colors.grey[300]!,
+                                highlightColor: Colors.grey[100]!,
+                                child: Container(
+                                  width: 150, // Ajuste la largeur des cartes
+                                  margin: const EdgeInsets.symmetric(
+                                      horizontal: 10),
+                                  child: Card(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(15),
+                                    ),
+                                    color: Colors.white,
+                                    elevation: 1.0,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            color: Colors.grey[
+                                                300], // Couleur de fond pour l'effet shimmer
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.all(10),
+                                          child: Container(
+                                            height:
+                                                10, // Hauteur pour le texte shimmer
+                                            color: Colors.grey[300],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               );
                             },
-                            child: Container(
-                              width: 150, // Ajuste la largeur des cartes
-                              margin: const EdgeInsets.symmetric(
-                                  horizontal: 10), // Espace entre les cartes
-                              child: Card(
-                               shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15), // Coins arrondis
-            ),
-                                color: Colors.white,
-                                elevation: 1.0,
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    Expanded(
-                                      child: Stack(
-                                        children: [
-                                          
-                                          Image.network(
-                                            plante['image']!,
-                                            fit: BoxFit.cover,
-                                            width: double.infinity,
-                                            height: double.infinity,
-                                            loadingBuilder:
-                                                (BuildContext context,
-                                                    Widget child,
-                                                    ImageChunkEvent?
-                                                        loadingProgress) {
-                                            
-                                                return child;
-                                              
-                                            },
+                          )
+                        : ListView.builder(
+                            scrollDirection:
+                                Axis.horizontal, // Défilement horizontal
+                            itemCount: filteredPlantes.length,
+                            itemBuilder: (context, index) {
+                              final plante = filteredPlantes[index];
+
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => DetailPlanteScreen(
+                                        nomPlante: plante['nom']!,
+                                        nomLocal: plante['nom_local'] ?? '',
+                                        imagePlante: plante['image']!,
+                                        description: plante['description'],
+                                        bienfaits: plante['bienfaits'],
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  width: 150, // Ajuste la largeur des cartes
+                                  margin: const EdgeInsets.symmetric(
+                                      horizontal:
+                                          10), // Espace entre les cartes
+                                  child: Card(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          15), // Coins arrondis
+                                    ),
+                                    color: Colors.white,
+                                    elevation: 1.0,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        Expanded(
+                                          child: Stack(
+                                            children: [
+                                              // Utilise le builder pour gérer le chargement d'image
+                                              Image.network(
+                                                plante['image']!,
+                                                fit: BoxFit.cover,
+                                                width: double.infinity,
+                                                height: double.infinity,
+                                                loadingBuilder:
+                                                    (BuildContext context,
+                                                        Widget child,
+                                                        ImageChunkEvent?
+                                                            loadingProgress) {
+                                                  if (loadingProgress == null) {
+                                                    return child; // Affiche l'image quand elle est chargée
+                                                  } else {
+                                                    return Container(
+                                                      color: Colors.grey[
+                                                          300], // Affiche une couleur grise pendant le chargement
+                                                    );
+                                                  }
+                                                },
+                                                errorBuilder: (context, error,
+                                                    stackTrace) {
+                                                  return Container(
+                                                    color: Colors.grey[
+                                                        300], // Affiche une couleur grise en cas d'erreur
+                                                  );
+                                                },
+                                              ),
+                                            ],
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(10),
-                                      child: Text(
-                                        plante['nom']!,
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          fontFamily: policePoppins,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13,
                                         ),
-                                      ),
+                                        Padding(
+                                          padding: const EdgeInsets.all(10),
+                                          child: Text(
+                                            plante['nom']!,
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              fontFamily: policePoppins,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  
+                              );
+                            },
+                          ),
+                  );
                 },
               ),
-
-
-
-
-            //-----------CENTRE PAGE-----------------------------------------------------
+              SizedBox(height: 10),
+              //-----------CENTRE PAGE-----------------------------------------------------
               // Section Explorez nos plantes
               Row(
                 children: [
@@ -669,114 +717,202 @@ Future<void> _loadCentres() async {
 
               //----------------------------------------------------------------
               FutureBuilder<void>(
-                future: _loadCentres(),
+                future: _futureCentres,
                 builder: (context, snapshot) {
-                 
-                    return SizedBox(
-  height: 200, // Ajuste la hauteur pour s'adapter à la taille des cartes
-  child: ListView.builder(
-    scrollDirection: Axis.horizontal, // Défilement horizontal
-    itemCount: centres.length,
-    itemBuilder: (context, index) {
-      final centre = centres[index];
-
-      return GestureDetector(
-        onTap: () {
-          // Action à effectuer lors du clic
-           Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => DetailsCentre(centre: centre),
+                  return SizedBox(
+                    height:
+                        200, // Ajuste la hauteur pour s'adapter à la taille des cartes
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal, // Défilement horizontal
+                      itemCount:
+                          snapshot.connectionState == ConnectionState.waiting
+                              ? 5
+                              : centres.length, // Utilise 5 pour le shimmer
+                      itemBuilder: (context, index) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          // Afficher l'effet shimmer
+                          return Shimmer.fromColors(
+                            baseColor: Colors.grey[300]!,
+                            highlightColor: Colors.grey[100]!,
+                            child: Container(
+                              width: 160, // Ajuste la largeur des cartes
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 10),
+                              child: Card(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      15), // Coins arrondis
+                                ),
+                                color: Colors.white,
+                                elevation:
+                                    2.0, // Élévation pour un effet d'ombre
+                                shadowColor: Colors.grey.withOpacity(0.8),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Expanded(
+                                      child: ClipRRect(
+                                        borderRadius:
+                                            const BorderRadius.vertical(
+                                          top: Radius.circular(15),
+                                        ),
+                                        child: Container(
+                                            color: Colors
+                                                .white), // Conteneur blanc pour l'effet
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8.0, horizontal: 10.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Container(
+                                            height: 16, // Hauteur du texte
+                                            color: Colors
+                                                .white, // Conteneur blanc pour l'effet
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Container(
+                                            height: 14, // Hauteur du texte
+                                            color: Colors
+                                                .white, // Conteneur blanc pour l'effet
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            );
-        },
-        child: Container(
-          width: 160, // Ajuste la largeur des cartes
-          margin: const EdgeInsets.symmetric(horizontal: 10), // Espace entre les cartes
-          child: Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15), // Coins arrondis
-            ),
-            color: Colors.white,
-            elevation: 2.0, // Élévation pour un effet d'ombre
-            shadowColor: Colors.grey.withOpacity(0.8), // Ombre plus subtile
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Image en haut avec un léger arrondi
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(15),
-                    ),
-                    child: Image.network(
-                      centre['image'],
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: double.infinity,
-                      errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
-                        return Icon(Icons.error, color: Colors.red);
+                            ),
+                          );
+                        } else {
+                          final centre = centres[index];
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      DetailsCentre(centre: centre),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              width: 160, // Ajuste la largeur des cartes
+                              margin: const EdgeInsets.symmetric(
+                                  horizontal: 10), // Espace entre les cartes
+                              child: Card(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      15), // Coins arrondis
+                                ),
+                                color: Colors.white,
+                                elevation:
+                                    2.0, // Élévation pour un effet d'ombre
+                                shadowColor: Colors.grey
+                                    .withOpacity(0.8), // Ombre plus subtile
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    // Image en haut avec un léger arrondi
+                                    Expanded(
+                                      child: ClipRRect(
+                                        borderRadius:
+                                            const BorderRadius.vertical(
+                                          top: Radius.circular(15),
+                                        ),
+                                        child: Image.network(
+                                          centre['image'],
+                                          fit: BoxFit.cover,
+                                          width: double.infinity,
+                                          height: double.infinity,
+                                          errorBuilder: (BuildContext context,
+                                              Object exception,
+                                              StackTrace? stackTrace) {
+                                            return Icon(Icons.error,
+                                                color: Colors.red);
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                    // Informations du centre : nom et adresse avec icônes et alignement à gauche
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8.0, horizontal: 10.0),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment
+                                            .start, // Alignement à gauche
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Icon(Icons.business,
+                                                  size: 16,
+                                                  color:
+                                                      couleurPrincipale), // Icône pour le nom
+                                              SizedBox(
+                                                  width:
+                                                      5), // Espacement entre l'icône et le texte
+                                              Expanded(
+                                                child: Text(
+                                                  centre['nom'],
+                                                  style: const TextStyle(
+                                                    fontFamily: 'Poppins',
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize:
+                                                        14, // Taille un peu plus grande pour le nom
+                                                    color:
+                                                        couleurPrincipale, // Couleur légèrement atténuée
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(
+                                              height:
+                                                  4), // Espacement entre le nom et l'adresse
+                                          Row(
+                                            children: [
+                                              Icon(Icons.location_on,
+                                                  size: 16,
+                                                  color:
+                                                      couleurPrincipale), // Icône pour l'adresse
+                                              SizedBox(
+                                                  width:
+                                                      5), // Espacement entre l'icône et le texte
+                                              Expanded(
+                                                child: Text(
+                                                  centre['adresse'],
+                                                  style: const TextStyle(
+                                                    fontFamily: policeLato,
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize:
+                                                        12, // Taille plus petite pour l'adresse
+                                                    color:
+                                                        couleurPrincipale, // Couleur grise pour différencier visuellement
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }
                       },
                     ),
-                  ),
-                ),
-                // Informations du centre : nom et adresse avec icônes et alignement à gauche
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start, // Alignement à gauche
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.business, size: 16, color: couleurPrincipale), // Icône pour le nom
-                          SizedBox(width: 5), // Espacement entre l'icône et le texte
-                          Expanded(
-                            child: Text(
-                              centre['nom'],
-                              style: const TextStyle(
-                                fontFamily: 'Poppins',
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14, // Taille un peu plus grande pour le nom
-                                color: couleurPrincipale, // Couleur légèrement atténuée
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4), // Espacement entre le nom et l'adresse
-                      Row(
-                        children: [
-                          Icon(Icons.location_on, size: 16, color: couleurPrincipale), // Icône pour l'adresse
-                          SizedBox(width: 5), // Espacement entre l'icône et le texte
-                          Expanded(
-                            child: Text(
-                              centre['adresse'],
-                              style: const TextStyle(
-                                fontFamily: policeLato,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12, // Taille plus petite pour l'adresse
-                                color: couleurPrincipale, // Couleur grise pour différencier visuellement
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    },
-  ),
-);
-                  
+                  );
                 },
-              )
-
-
+              ),
             ],
           ),
         ),

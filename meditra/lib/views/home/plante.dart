@@ -2,6 +2,7 @@
   import 'package:cloud_firestore/cloud_firestore.dart';
   import 'package:meditra/config/config.dart';
   import 'package:meditra/views/home/detail_plante.dart';
+import 'package:meditra/views/home/remede.dart';
   import 'package:shimmer/shimmer.dart'; 
 
   class PlanteScreen extends StatefulWidget {
@@ -85,10 +86,12 @@ class _PlanteScreenState extends State<PlanteScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         title: const Text(
           'Liste des Plantes',
           style: TextStyle(
             fontFamily: policeLato,
+            fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Colors.black,
           ),
@@ -103,10 +106,47 @@ class _PlanteScreenState extends State<PlanteScreen> {
           ),
         ),
       ),
+      
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
+        child: Padding(
+        padding: const EdgeInsets.all(8),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // SizedBox(height: 6),
+            ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const RemedeScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.local_pharmacy, color: Colors.white),
+                    label: const Text(
+                      'Voir les rémèdes',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: couleurPrincipale,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 13, horizontal: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+             const Divider(
+              color: Colors.grey,
+              thickness: 0.5,
+              indent: 16,
+              endIndent: 18,
+            ),
             Padding(
               padding: const EdgeInsets.all(15),
               child: Container(
@@ -238,6 +278,7 @@ class _PlanteScreenState extends State<PlanteScreen> {
           ],
         ),
       ),
+       ),
     );
   }
 }

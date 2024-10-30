@@ -26,6 +26,7 @@ class AuthVisitorService {
         'firstName': firstName,
         'lastName': lastName,
         'email': _auth.currentUser!.email, // Utiliser l'email du nouvel utilisateur
+        'isActive': true, // Par défaut, le visiteur est activé
         'role': 'visiteur',
       });
     } catch (e) {

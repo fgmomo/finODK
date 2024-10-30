@@ -11,7 +11,7 @@ class Maladie {
 
   });
 
-  // Méthode pour convertir un Maladie en Map
+  // Méthode pour convertir une Maladie en Map
   Map<String, dynamic> toMap() {
     return {
       'nom': nom,

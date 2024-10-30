@@ -106,6 +106,7 @@ class _RemedeListScreenState extends State<RemedeListScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         title: Text(
           'Remèdes pour ${widget.nomMaladie}',
           style: const TextStyle(
@@ -116,7 +117,7 @@ class _RemedeListScreenState extends State<RemedeListScreen> {
         ),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        elevation: 1,
+        // elevation: 1,
       ),
       body: _isLoading
           ? Center(

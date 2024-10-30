@@ -30,8 +30,10 @@ class RemedeMaladieService {
           remedesMaladies.add({
             'maladie': maladieData,
             'remede': remedeData,
-          'maladie_ref': maladieSnapshot.reference, // Assurez-vous que cela existe
-      'remede_ref': remedeSnapshot.reference, // Assurez-vous que cela existe
+            'maladie_ref':
+                maladieSnapshot.reference, // Assurez-vous que cela existe
+            'remede_ref':
+                remedeSnapshot.reference, // Assurez-vous que cela existe
           });
         }
       }
@@ -39,23 +41,75 @@ class RemedeMaladieService {
     });
   }
 
-  // Méthode pour dissocier un remède d'une maladie
-Future<void> dissocierRemedeMaladie(DocumentReference remedeRef, DocumentReference maladieRef) async {
-  final remedeMaladieRef = await _firestore
-      .collection('remede_maladie')
-      .where('remede_ref', isEqualTo: remedeRef)
-      .where('maladie_ref', isEqualTo: maladieRef)
-      .get();
 
-  if (remedeMaladieRef.docs.isEmpty) {
-    print('Aucun document trouvé pour dissociation.');
-    return; // Sortir si aucun document n'est trouvé
+  // Méthode pour récupérer la liste des maladies
+  Future<List<Map<String, dynamic>>> getMaladies() async {
+    QuerySnapshot snapshot = await _firestore.collection('maladies').get();
+    return snapshot.docs
+        .map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>})
+        .toList();
   }
 
-  for (var doc in remedeMaladieRef.docs) {
-    await doc.reference.delete();
-    print('Document supprimé: ${doc.id}');
+  // Méthode pour récupérer la liste des remèdes
+  Future<List<Map<String, dynamic>>> getRemedes() async {
+    QuerySnapshot snapshot = await _firestore.collection('remedes').get();
+    return snapshot.docs
+        .map((doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>})
+        .toList();
+  }
+
+    // Méthode pour associer un remède à une maladie
+ Future<void> associerRemedeMaladie(String remedeId, String maladieId) async {
+    try {
+      // Vérifier si l'association existe déjà
+      QuerySnapshot existingAssociation = await _firestore
+          .collection('remede_maladie')
+          .where('remede_ref', isEqualTo: _firestore.collection('remedes').doc(remedeId))
+          .where('maladie_ref', isEqualTo: _firestore.collection('maladies').doc(maladieId))
+          .get();
+
+      if (existingAssociation.docs.isNotEmpty) {
+        // Si l'association existe déjà, on renvoie une erreur
+        throw Exception('Cette association existe déjà.');
+      }
+
+      // Si l'association n'existe pas, on procède à l'ajout
+      await _firestore.collection('remede_maladie').add({
+        'remede_ref': _firestore.collection('remedes').doc(remedeId),
+        'maladie_ref': _firestore.collection('maladies').doc(maladieId),
+      });
+      print('Association réussie.');
+    } catch (e) {
+      // Gérer l'erreur et l'afficher
+      print('Erreur lors de l\'association: $e');
+      rethrow; // Relancer l'exception si nécessaire
+    }
+  }
+
+  // Méthode pour dissocier un remède d'une maladie
+ Future<void> dissocierRemedeMaladie(Map<String, dynamic> remedeMaladie) async {
+  final remedeRef = remedeMaladie['remede_ref'];
+  final maladieRef = remedeMaladie['maladie_ref'];
+
+  if (remedeRef != null && maladieRef != null) {
+    try {
+      // Logique pour dissocier le remède et la maladie (suppression du document dans remede_maladie)
+      await _firestore
+          .collection('remede_maladie')
+          .where('remede_ref', isEqualTo: remedeRef)
+          .where('maladie_ref', isEqualTo: maladieRef)
+          .get()
+          .then((snapshot) {
+        for (var doc in snapshot.docs) {
+          doc.reference.delete();
+        }
+      });
+      print('Dissociation réussie.');
+    } catch (e) {
+      print('Erreur lors de la dissociation: $e');
+    }
+  } else {
+    print('Erreur: Référence de remède ou de maladie est null.');
   }
 }
-
 }

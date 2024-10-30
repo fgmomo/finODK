@@ -22,7 +22,7 @@ class _MaladiePageState extends State<MaladiePage> {
         backgroundColor: const Color.fromARGB(255, 245, 245, 245),
         title: Row(
           children: [
-            Text('Tableau des Maladies',
+            Text('Liste des Maladies',
                 style: TextStyle(fontFamily: policePoppins)),
             SizedBox(width: 10),
             TextButton(

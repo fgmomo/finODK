@@ -4,6 +4,7 @@ import 'package:meditra/sevices/authadmin_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:meditra/views/admin_home/layouts/main_layout.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginScreenAdmin extends StatefulWidget {
   @override
@@ -19,31 +20,45 @@ class _LoginScreenAdminState extends State<LoginScreenAdmin> {
   final authAdminService = AuthAdminService();
 
   Future<void> login() async {
-    setState(() {
-      isLoading = true;
-      errorMessage = '';
-    });
+  setState(() {
+    isLoading = true;
+    errorMessage = '';
+  });
 
-    User? user = await authAdminService.loginAdmin(
-      emailController.text,
-      passwordController.text,
-    );
+  User? user = await authAdminService.loginAdmin(
+    emailController.text,
+    passwordController.text,
+  );
 
-    setState(() {
-      isLoading = false;
-    });
+  setState(() {
+    isLoading = false;
+  });
 
-    if (user != null) {
+  if (user != null) {
+    // Vérifie si l'utilisateur admin est actif
+    final adminDoc = await FirebaseFirestore.instance
+        .collection('admin')
+        .doc(user.uid)
+        .get();
+
+    if (adminDoc.exists && adminDoc.data()!['isActive'] == true) {
+      // Si l'administrateur est actif, redirige vers la page principale
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => MainLayout()),
       );
     } else {
+      // Si l'administrateur n'est pas actif, affiche un message d'erreur
       setState(() {
-        errorMessage = 'Email ou mot de passe incorrect, ou non-admin';
+        errorMessage = 'Compte admin inactif. Contactez l\'administrateur.';
       });
     }
+  } else {
+    setState(() {
+      errorMessage = 'Email ou mot de passe incorrect, ou non-admin';
+    });
   }
+}
 
   @override
   Widget build(BuildContext context) {

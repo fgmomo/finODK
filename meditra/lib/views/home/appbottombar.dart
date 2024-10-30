@@ -21,26 +21,24 @@ class CustomBottomNavigationBar extends StatelessWidget {
           icon: Icon(Icons.home),
           label: '', // Label vide
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.grass),
-          label: '', // Label vide
-        ),
+    
         BottomNavigationBarItem(
           icon: Icon(Icons.calendar_today),
           label: '', // Label vide
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.article),
+            BottomNavigationBarItem(
+          icon: Icon(Icons.local_pharmacy),
           label: '', // Label vide
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.description),
+          label: 'article', // Label vide
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person),
           label: '', // Label vide
         ),
-         BottomNavigationBarItem(
-          icon: Icon(Icons.calendar_today),
-          label: '', // Label vide
-        ),
+        
       ],
       selectedItemColor: couleurPrincipale,
       unselectedItemColor: const Color.fromARGB(255, 187, 216, 187),
@@ -49,7 +47,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
       showSelectedLabels: false, // Ne pas afficher les labels sélectionnés
       showUnselectedLabels:
           false, // Ne pas afficher les labels non sélectionnés
-      iconSize: 25, // Ajuste la taille des icônes
+      iconSize: 30, // Ajuste la taille des icônes
     );
   }
 }

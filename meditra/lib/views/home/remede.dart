@@ -69,6 +69,8 @@ class _RemedeScreenState extends State<RemedeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        
+        scrolledUnderElevation: 0,
         title: const Text(
           'Remèdes',
           style: TextStyle(
@@ -78,7 +80,7 @@ class _RemedeScreenState extends State<RemedeScreen> {
         ),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        elevation: 1,
+        // elevation: 1,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
           child: Container(

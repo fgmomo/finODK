@@ -27,7 +27,8 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     // Vérification des champs vides
-    if (emailController.text.trim().isEmpty || passwordController.text.trim().isEmpty) {
+    if (emailController.text.trim().isEmpty ||
+        passwordController.text.trim().isEmpty) {
       setState(() {
         errorMessage = 'Veuillez remplir tous les champs.';
         isLoading = false; // Arrête le chargement
@@ -37,8 +38,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       // Authentification avec Firebase
-      UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
@@ -53,6 +54,19 @@ class _LoginScreenState extends State<LoginScreen> {
             .get();
 
         if (visitorDoc.exists) {
+          Map<String, dynamic>? visitorData =
+              visitorDoc.data() as Map<String, dynamic>?;
+          bool isActive = visitorData?['isActive'] ??
+              true; // Par défaut, true s'il n'existe pas
+
+          if (!isActive) {
+            setState(() {
+              errorMessage =
+                  'Votre compte a été désactivé par l\'administrateur.';
+              isLoading = false; // Arrête le chargement
+            });
+            return;
+          }
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => AccueilVisitorHomeScreen()),
@@ -67,21 +81,45 @@ class _LoginScreenState extends State<LoginScreen> {
             .get();
 
         if (praticienDoc.exists) {
-          Map<String, dynamic>? praticienData = praticienDoc.data() as Map<String, dynamic>?;
+          Map<String, dynamic>? praticienData =
+              praticienDoc.data() as Map<String, dynamic>?;
 
           if (praticienData != null) {
+            // Vérification du champ isActive
+            bool isActive = praticienData['isActive'] ??
+                true; // Par défaut, true si non défini
+
+            if (!isActive) {
+              setState(() {
+                errorMessage =
+                    'Votre compte a été désactivé par l\'administrateur.';
+                isLoading = false; // Arrête le chargement
+              });
+              return;
+            }
+
+            // Vérification du statut du praticien
             String status = praticienData['status'] ?? 'inconnu';
 
             if (status == 'en attente') {
               setState(() {
-                errorMessage = 'Vos informations sont en attente de vérification.';
+                errorMessage =
+                    'Vos informations sont en attente de vérification.';
+                isLoading = false; // Arrête le chargement
+              });
+              return;
+            } else if (status == 'rejeté') {
+              setState(() {
+                errorMessage =
+                    'Votre demande a été rejetée par l\'administration.';
                 isLoading = false; // Arrête le chargement
               });
               return;
             } else if (status == 'approuvé') {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => AccueilPraticienHomeScreen()),
+                MaterialPageRoute(
+                    builder: (context) => AccueilPraticienHomeScreen()),
               );
               return;
             }
@@ -195,12 +233,14 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: isLoading ? null : login, // Désactiver le bouton pendant le chargement
+                  onPressed: isLoading
+                      ? null
+                      : login, // Désactiver le bouton pendant le chargement
                   child: isLoading
-                        ? LoadingAnimationWidget.horizontalRotatingDots(
-                            color: couleurPrincipale,
-                            size: 30,
-                          ) // Affiche l'animation de chargement
+                      ? LoadingAnimationWidget.horizontalRotatingDots(
+                          color: couleurPrincipale,
+                          size: 30,
+                        ) // Affiche l'animation de chargement
                       : Text(
                           'Connexion',
                           style: TextStyle(

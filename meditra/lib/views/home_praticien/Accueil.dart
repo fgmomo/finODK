@@ -7,6 +7,7 @@ import 'package:meditra/views/home_praticien/appbottombar.dart';
 import 'package:meditra/views/home_praticien/articles.dart';
 import 'package:meditra/views/home_praticien/praticien_consultation.dart';
 import 'package:meditra/views/home_praticien/praticien_home.dart';
+import 'package:meditra/views/home_praticien/praticien_profil.dart';
 
 
 class AccueilPraticienHomeScreen extends StatefulWidget {
@@ -35,10 +36,10 @@ class _AccueilPraticienHomeScreenState extends State<AccueilPraticienHomeScreen>
         controller: _pageController,
         children: <Widget>[
           PraticienHomeScreen(),
-          PlanteScreen(),
-          RemedeScreen(),
           PraticienConsultationScreen(),
+          PlanteScreen(),
           PraticienAllArticleScreen(),
+          PraticienProfilScreen(),
         ],
       ),
       bottomNavigationBar: CustomBottomNavigationBarPraticien(
