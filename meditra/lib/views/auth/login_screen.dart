@@ -160,8 +160,9 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+            
               SizedBox(height: 50),
-              if (errorMessage.isNotEmpty)
+               if (errorMessage.isNotEmpty)
                 Container(
                   padding: EdgeInsets.all(10),
                   color: Colors.redAccent,
@@ -177,27 +178,34 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
+                ), 
+              // Ajout du logo en haut du formulaire
+              Center(
+                child: Image.asset(
+                  'assets/yiri2.png', // Chemin vers ton logo
+                  height: 120, // Hauteur de l'image
+                  width: 120, // Largeur de l'image
+                  fit: BoxFit
+                      .contain, // Option pour adapter l'image sans étirement
                 ),
+              ),
+
+              SizedBox(height: 10), // Espace entre le logo et le texte suivant
+
+              
+              SizedBox(height: 15),
+              Center(
+                child: Text(
+                  'Connectez-vous',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: policeLato,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
               SizedBox(height: 20),
-              Text(
-                'Hey,',
-                style: TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: policeLato,
-                  color: couleurPrincipale,
-                ),
-              ),
-              SizedBox(height: 5),
-              Text(
-                'Bienvenue',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontFamily: policePoppins,
-                  color: Colors.black,
-                ),
-              ),
-              SizedBox(height: 50),
               TextField(
                 controller: emailController,
                 decoration: InputDecoration(

@@ -28,16 +28,19 @@ class _RegisterPraticienScreenState extends State<RegisterPraticienScreen> {
   String? errorMessage;
 
   File? _selectedPhoto; // Pour stocker la photo sélectionnée
-  File? _selectedJustificatifPhoto; // Pour stocker la photo justificatif sélectionnée
+  File?
+      _selectedJustificatifPhoto; // Pour stocker la photo justificatif sélectionnée
 
-  final ImagePicker _picker = ImagePicker(); // Initialiser le sélecteur d'images
+  final ImagePicker _picker =
+      ImagePicker(); // Initialiser le sélecteur d'images
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         title: Text('Inscription Praticien'),
-        backgroundColor: couleurPrincipale,
+        backgroundColor: Colors.white,
       ),
       body: Column(
         children: [
@@ -62,72 +65,73 @@ class _RegisterPraticienScreenState extends State<RegisterPraticienScreen> {
       ),
     );
   }
+
   void _showSuccessDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.green,
-              ),
-              padding: EdgeInsets.all(16),
-              child: Icon(
-                Icons.check,
-                size: 40,
-                color: Colors.white,
-              ),
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Inscription réussie',
-              style: TextStyle(
-                fontFamily: policePoppins,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: couleurPrincipale,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 10),
-            Text(
-              'Merci pour votre inscription ! Nous avons reçu vos informations et nous les examinerons bientôt. Vous serez informé de l\'état de votre inscription.',
-              style: TextStyle(
-                fontFamily: policePoppins,
-                fontSize: 15,
-                color: Colors.grey[700],
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 20),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.pop(context); // Ferme le dialog et le screen
-              },
-              child: Text(
-                'Fermer',
-                style: TextStyle(
-                  fontFamily: policePoppins,
-                  color: couleurPrincipale,
-                  fontSize: 16,
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.green,
+                ),
+                padding: EdgeInsets.all(16),
+                child: Icon(
+                  Icons.check,
+                  size: 40,
+                  color: Colors.white,
                 ),
               ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
+              SizedBox(height: 20),
+              Text(
+                'Inscription réussie',
+                style: TextStyle(
+                  fontFamily: policePoppins,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: couleurPrincipale,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 10),
+              Text(
+                'Merci pour votre inscription ! Nous avons reçu vos informations et nous les examinerons bientôt. Vous serez informé de l\'état de votre inscription.',
+                style: TextStyle(
+                  fontFamily: policePoppins,
+                  fontSize: 15,
+                  color: Colors.grey[700],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 20),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.pop(context); // Ferme le dialog et le screen
+                },
+                child: Text(
+                  'Fermer',
+                  style: TextStyle(
+                    fontFamily: policePoppins,
+                    color: couleurPrincipale,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   List<Step> getSteps() => [
         Step(
@@ -157,7 +161,8 @@ class _RegisterPraticienScreenState extends State<RegisterPraticienScreen> {
         _buildTextField(lastNameController, 'Nom'),
         _buildTextField(emailController, 'Email'),
         _buildPasswordField(passwordController, 'Mot de passe'),
-        _buildPasswordField(confirmPasswordController, 'Confirmez le mot de passe'),
+        _buildPasswordField(
+            confirmPasswordController, 'Confirmez le mot de passe'),
         _buildUploadButton("Télécharger une photo de profil", _pickImage),
         if (_selectedPhoto != null) Text('Photo de profil sélectionnée'),
       ],
@@ -169,9 +174,12 @@ class _RegisterPraticienScreenState extends State<RegisterPraticienScreen> {
       children: [
         _buildTextField(addressController, 'Adresse professionnelle'),
         _buildTextField(professionalNumberController, 'Numéro professionnel'),
-        _buildUploadButton("Uploader une photo justificatif", _pickJustificatifImage),
-        if (_selectedJustificatifPhoto != null) Text('Photo justificatif sélectionnée'),
-        _buildMultilineTextField(justificationController, 'Pourquoi voulez-vous rejoindre ?'),
+        _buildUploadButton(
+            "Uploader une photo justificatif", _pickJustificatifImage),
+        if (_selectedJustificatifPhoto != null)
+          Text('Photo justificatif sélectionnée'),
+        _buildMultilineTextField(
+            justificationController, 'Pourquoi voulez-vous rejoindre ?'),
       ],
     );
   }
@@ -205,7 +213,8 @@ class _RegisterPraticienScreenState extends State<RegisterPraticienScreen> {
     );
   }
 
-  Widget _buildMultilineTextField(TextEditingController controller, String label) {
+  Widget _buildMultilineTextField(
+      TextEditingController controller, String label) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20.0),
       child: TextField(
@@ -258,7 +267,8 @@ class _RegisterPraticienScreenState extends State<RegisterPraticienScreen> {
         if (_selectedPhoto != null)
           Text('Photo de profil: ${_selectedPhoto!.path.split('/').last}'),
         if (_selectedJustificatifPhoto != null)
-          Text('Photo justificatif: ${_selectedJustificatifPhoto!.path.split('/').last}'),
+          Text(
+              'Photo justificatif: ${_selectedJustificatifPhoto!.path.split('/').last}'),
       ],
     );
   }
@@ -298,7 +308,8 @@ class _RegisterPraticienScreenState extends State<RegisterPraticienScreen> {
         confirmPasswordController.text.isEmpty ||
         _selectedPhoto == null) {
       setState(() {
-        errorMessage = "Tous les champs doivent être remplis et une photo doit être uploadée.";
+        errorMessage =
+            "Tous les champs doivent être remplis et une photo doit être uploadée.";
       });
       return false;
     }
@@ -318,7 +329,8 @@ class _RegisterPraticienScreenState extends State<RegisterPraticienScreen> {
         _selectedJustificatifPhoto == null ||
         justificationController.text.isEmpty) {
       setState(() {
-        errorMessage = "Tous les champs doivent être remplis et le justificatif doit être uploadé.";
+        errorMessage =
+            "Tous les champs doivent être remplis et le justificatif doit être uploadé.";
       });
       return false;
     }
@@ -345,70 +357,68 @@ class _RegisterPraticienScreenState extends State<RegisterPraticienScreen> {
   }
 
   Future<void> register() async {
-  try {
-    // Créez un nouvel utilisateur avec Firebase Auth
-    UserCredential userCredential =
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
-            email: emailController.text,
-            password: passwordController.text);
-
-    // Upload des images et récupérer leurs URLs
-    String? photoUrl;
-    String? justificatifUrl;
-
-    if (_selectedPhoto != null) {
-      photoUrl = await _uploadFile(_selectedPhoto, 'photos_profil/${userCredential.user?.uid}');
-    }
-
-    if (_selectedJustificatifPhoto != null) {
-      justificatifUrl = await _uploadFile(_selectedJustificatifPhoto, 'justificatifs/${userCredential.user?.uid}');
-    }
-
-    // Enregistrez les informations de l'utilisateur dans Firestore
-    await FirebaseFirestore.instance
-        .collection('praticiens')
-        .doc(userCredential.user?.uid)
-        .set({
-      'firstName': firstNameController.text,
-      'lastName': lastNameController.text,
-      'email': emailController.text,
-      'address': addressController.text,
-      'professionalNumber': professionalNumberController.text,
-      'justification': justificationController.text,
-      'photoUrl': photoUrl, 
-      'justificatifUrl': justificatifUrl,
-      'isActive': true,
-      'role': 'praticien', // Initialisation du rôle
-      'status': 'en attente', // Initialisation du statut
-    });
-
-    // Réinitialisez les champs
-    _resetFields();
-
-    // Affichez le dialog de succès
-    _showSuccessDialog(context);
-  
-  } catch (e) {
-    setState(() {
-      errorMessage = "Erreur lors de l'inscription : ${e.toString()}";
-    });
-  }
-}
-
-Future<String?> _uploadFile(File? file, String path) async {
-  if (file != null) {
     try {
-      final ref = FirebaseStorage.instance.ref(path);
-      await ref.putFile(file);
-      return await ref.getDownloadURL(); // Retourner l'URL du fichier
+      // Créez un nouvel utilisateur avec Firebase Auth
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+              email: emailController.text.trim(),
+              password: passwordController.text);
+
+      // Upload des images et récupérer leurs URLs après la création de l'utilisateur
+      String? photoUrl;
+      String? justificatifUrl;
+
+      // Upload de la photo de profil
+      if (_selectedPhoto != null) {
+        photoUrl = await _uploadFile(
+            _selectedPhoto!, 'photos_profil/${userCredential.user?.uid}');
+      }
+
+      // Upload du justificatif
+      if (_selectedJustificatifPhoto != null) {
+        justificatifUrl = await _uploadFile(_selectedJustificatifPhoto!,
+            'justificatifs/${userCredential.user?.uid}');
+      }
+
+      // Enregistrez les informations de l'utilisateur dans Firestore
+      await FirebaseFirestore.instance
+          .collection('praticiens')
+          .doc(userCredential.user?.uid)
+          .set({
+        'firstName': firstNameController.text,
+        'lastName': lastNameController.text,
+        'email': emailController.text,
+        'address': addressController.text,
+        'professionalNumber': professionalNumberController.text,
+        'justification': justificationController.text,
+        'photoUrl': photoUrl, // Enregistrez l'URL de la photo
+        'justificatifUrl': justificatifUrl, // Enregistrez l'URL du justificatif
+      });
+
+      // Montrez le message de succès
+      _showSuccessDialog(context);
     } catch (e) {
+      print("Erreur lors de l'inscription : $e");
       setState(() {
-        errorMessage = "Erreur lors de l'upload du fichier : ${e.toString()}";
+        errorMessage = "Erreur lors de l'inscription : ${e.toString()}";
       });
     }
   }
-  return null; // Si aucun fichier n'est présent
-}
+
+  Future<String?> _uploadFile(File file, String filePath) async {
+    try {
+      final Reference storageReference =
+          FirebaseStorage.instance.ref().child(filePath);
+      final UploadTask uploadTask = storageReference.putFile(file);
+      final TaskSnapshot snapshot = await uploadTask;
+      String downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl; // retourne l'URL de téléchargement
+    } catch (e) {
+      print('Error uploading file: $e');
+      return null; // Retourne null en cas d'erreur
+    }
+  }
+
   void _resetFields() {
     firstNameController.clear();
     lastNameController.clear();

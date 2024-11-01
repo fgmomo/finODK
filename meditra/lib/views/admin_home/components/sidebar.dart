@@ -36,13 +36,11 @@ class _SidebarState extends State<Sidebar> {
         child: ListView(
           children: [
             DrawerHeader(
-              child: Text(
-                'Backoffice Menu',
-                style: TextStyle(
-                  color: couleurPrincipale,
-                  fontSize: 24,
-                  fontFamily: policePoppins, // Utilisation de la police Poppins
-                ),
+              child: Image.asset(
+                'assets/yiri2.png', // Chemin de l'image
+                width: 120, // Largeur personnalisée si nécessaire
+                height: 10, // Hauteur personnalisée si nécessaire
+                fit: BoxFit.contain, // Ajustement de l'image
               ),
             ),
             _buildListItem(
