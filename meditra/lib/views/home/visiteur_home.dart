@@ -457,6 +457,7 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
                                   InkWell(
                                     onTap: () {
                                       print("Icône cliquée !");
+                              
                                     },
                                     borderRadius: BorderRadius.circular(50),
                                     child: Container(

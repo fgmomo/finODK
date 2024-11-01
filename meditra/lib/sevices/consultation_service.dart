@@ -204,6 +204,15 @@ class ConsultationService {
     }
   }
 
+Future<void> rejectConsultation(String reference) async {  
+      await FirebaseFirestore.instance
+          .collection('consultations')
+          .doc(reference)
+          .update({'status': 'rejeté'});
+  }
+
+
+
 // Consultation en attente du visiteur
   Future<List<Map<String, dynamic>>> fetchConsultationsAttVisiteur() async {
     List<Map<String, dynamic>> consultations = [];
@@ -414,6 +423,107 @@ class ConsultationService {
 
     return null; // Retourne null s'il n'y a pas de consultation approuvée
   }
+
+
+
+
+Future<Map<String, dynamic>?> fetchDerniereConsultationAppPraticien() async {
+  // Récupération de l'ID du praticien connecté via Firebase Auth
+  String? praticienId = FirebaseAuth.instance.currentUser?.uid;
+
+  if (praticienId == null) {
+    print("Aucun praticien connecté.");
+    return null; // Retourne null si aucun praticien n'est connecté
+  }
+
+  try {
+    print("Récupération des créneaux pour le praticien : $praticienId");
+
+    // Récupération des créneaux associés au praticien
+    QuerySnapshot crenauxSnapshot = await FirebaseFirestore.instance
+        .collection('crenaux')
+        .where('praticien_id', isEqualTo: praticienId)
+        .get();
+
+    if (crenauxSnapshot.docs.isEmpty) {
+      print("Aucun créneau associé trouvé pour ce praticien.");
+      return null;
+    }
+
+    // Extraire les IDs de créneaux
+    List<String> crenauIds = crenauxSnapshot.docs.map((doc) => doc.id).toList();
+
+    // Récupérer la dernière consultation approuvée parmi ces créneaux
+    QuerySnapshot consultationsSnapshot = await FirebaseFirestore.instance
+        .collection('consultations')
+        .where('crenauId', whereIn: crenauIds) // Filtrer par les IDs de créneaux associés
+        .where('status', isEqualTo: 'approuvé') // Filtre pour les consultations approuvées
+        .orderBy('createdAt', descending: true) // Trie par date décroissante
+        .limit(1) // Limite à une seule consultation
+        .get();
+
+    if (consultationsSnapshot.docs.isNotEmpty) {
+      var consultationDoc = consultationsSnapshot.docs.first;
+      print("Consultation trouvée : ${consultationDoc.id}");
+      var consultationData = consultationDoc.data() as Map<String, dynamic>;
+      String crenauId = consultationData['crenauId'];
+      String visiteurId = consultationData['visiteurId'];
+
+      // Récupération des détails du créneau
+      DocumentSnapshot crenauSnapshot = await FirebaseFirestore.instance
+          .collection('crenaux')
+          .doc(crenauId)
+          .get();
+
+      if (!crenauSnapshot.exists) {
+        print("Créneau non trouvé.");
+        return null;
+      }
+
+      var crenauData = crenauSnapshot.data() as Map<String, dynamic>;
+
+      // Récupération des informations du visiteur
+      DocumentSnapshot visiteurSnapshot = await FirebaseFirestore.instance
+          .collection('visiteurs')
+          .doc(visiteurId)
+          .get();
+
+      String visiteurNom = '';
+      String visiteurPrenom = '';
+      String visiteurPhotoUrl = '';
+
+      if (visiteurSnapshot.exists) {
+        var visiteurData = visiteurSnapshot.data() as Map<String, dynamic>;
+        visiteurNom = visiteurData['lastName'];
+        visiteurPrenom = visiteurData['firstName'];
+        visiteurPhotoUrl = visiteurData['profileImageUrl'];
+      } else {
+        print("Visiteur non trouvé.");
+      }
+
+      // Retourne les informations de la dernière consultation
+      return {
+        'reference': consultationDoc.id,
+        'crenau_date': crenauData['date'],
+        'crenau_heures': '${crenauData['heure_debut']} - ${crenauData['heure_fin']}',
+        'message': consultationData['message'],
+        'visiteur_nom': visiteurNom,
+        'visiteur_prenom': visiteurPrenom,
+        'visiteur_photo': visiteurPhotoUrl,
+      };
+    } else {
+      print("Aucune consultation approuvée trouvée pour ces créneaux.");
+    }
+  } catch (e) {
+    print("Erreur lors de la récupération de la dernière consultation : $e");
+  }
+
+  return null; // Retourne null s'il n'y a pas de consultation approuvée
+}
+
+
+
+
 
 // Consultation rejetée du visiteur
   Future<List<Map<String, dynamic>>> fetchConsultationsRejVisiteur() async {

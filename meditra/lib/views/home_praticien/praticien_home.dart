@@ -83,7 +83,7 @@ class _PraticienHomeScreenState extends State<PraticienHomeScreen> {
     super.initState();
     // Appel pour récupérer la dernière consultation approuvée
     _futureConsultation =
-        _consultationService.fetchDerniereConsultationAppVisiteur();
+        _consultationService.fetchDerniereConsultationAppPraticien();
     _futureMaladies = _maladieService.fetchMaladies();
     _futurePlantes = _fetchPlantes();
     _futureCentres = _loadCentres();
@@ -235,9 +235,9 @@ class _PraticienHomeScreenState extends State<PraticienHomeScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 ClipOval(
-                                  child: consultation['profileImageUrl'] != null
+                                  child: consultation['visiteur_photo'] != null
                                       ? Image.network(
-                                          consultation['profileImageUrl'],
+                                          consultation['visiteur_photo'],
                                           width: 50,
                                           height: 50,
                                           fit: BoxFit.cover,
@@ -265,7 +265,7 @@ class _PraticienHomeScreenState extends State<PraticienHomeScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        consultation['praticien'],
+                                          '${consultation['visiteur_prenom']} ${consultation['visiteur_nom']}',
                                         style: TextStyle(
                                           fontSize: 18,
                                           color: Colors.white,
@@ -308,7 +308,7 @@ class _PraticienHomeScreenState extends State<PraticienHomeScreen> {
                                         color: Colors.white),
                                     SizedBox(width: 5),
                                     Text(
-                                      '${consultation['crenau_heures']}',
+                                     '${consultation['crenau_heures']}',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontFamily: policePoppins,

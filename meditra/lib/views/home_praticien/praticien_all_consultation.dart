@@ -84,63 +84,66 @@ class _PraticienAllConsultationScreenState
   }
 
   // Définition de la méthode approuverConsultation
- void approveConsultation(BuildContext context, String reference) async {
-  try {
-    // Logique pour approuver la consultation
-    await ConsultationService().approveConsultation(reference);
+  void approveConsultation(BuildContext context, String reference) async {
+    try {
+      // Logique pour approuver la consultation
+      await ConsultationService().approveConsultation(reference);
 
-    // Afficher la boîte de dialogue de confirmation avec le bouton "Ouvrir la discussion"
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return ConfirmationDialog(
-          title: 'Consultation approuvée avec succès',
-          message: 'La consultation a été approuvée. Vous pouvez commencer à discuter avec le patient.',
-          primaryButtonText: 'Ouvrir la discussion', // Nouveau bouton pour ouvrir la discussion
-          secondaryButtonText: 'Fermer', // Pour fermer la boîte de dialogue
-          onPrimaryButtonPressed: () {
-            Navigator.of(context).pop(); // Ferme la boîte de dialogue
-            // Redirige vers la page de discussion
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => DiscussionPage(
-                  discussionId: reference, // Utilise la référence de la consultation comme ID de discussion
+      // Afficher la boîte de dialogue de confirmation avec le bouton "Ouvrir la discussion"
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return ConfirmationDialog(
+            title: 'Consultation approuvée avec succès',
+            message:
+                'La consultation a été approuvée. Vous pouvez commencer à discuter avec le patient.',
+            primaryButtonText:
+                'Ouvrir la discussion', // Nouveau bouton pour ouvrir la discussion
+            secondaryButtonText: 'Fermer', // Pour fermer la boîte de dialogue
+            onPrimaryButtonPressed: () {
+              Navigator.of(context).pop(); // Ferme la boîte de dialogue
+              // Redirige vers la page de discussion
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DiscussionPage(
+                    discussionId:
+                        reference, // Utilise la référence de la consultation comme ID de discussion
+                  ),
                 ),
-              ),
-            );
-          },
-        );
-      },
-    );
+              );
+            },
+          );
+        },
+      );
 
-    // Mettre à jour la liste des consultations après approbation
-    await fetchAndSetConsultations();
-  } catch (error) {
-    // Afficher un message d'erreur en cas de problème
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return ConfirmationDialog(
-          title: 'Erreur lors de l\'approbation',
-          message: 'Une erreur s\'est produite : $error',
-          primaryButtonText: 'Fermer', // Seulement un bouton pour fermer dans le cas d'une erreur
-          onPrimaryButtonPressed: () {
-            Navigator.of(context).pop();
-          },
-          icon: Icons.error,
-          backgroundColor: Colors.red[50]!, // Changez si nécessaire
-        );
-      },
-    );
+      // Mettre à jour la liste des consultations après approbation
+      await fetchAndSetConsultations();
+    } catch (error) {
+      // Afficher un message d'erreur en cas de problème
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return ConfirmationDialog(
+            title: 'Erreur lors de l\'approbation',
+            message: 'Une erreur s\'est produite : $error',
+            primaryButtonText:
+                'Fermer', // Seulement un bouton pour fermer dans le cas d'une erreur
+            onPrimaryButtonPressed: () {
+              Navigator.of(context).pop();
+            },
+            icon: Icons.error,
+            backgroundColor: Colors.red[50]!, // Changez si nécessaire
+          );
+        },
+      );
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-     
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: consultationsFuture,
         builder: (context, snapshot) {
@@ -162,7 +165,6 @@ class _PraticienAllConsultationScreenState
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16.0,
                         vertical: 10), // Aligné avec la barre de recherche
-                
                   ),
                   // Barre de recherche
                   Padding(
@@ -292,6 +294,8 @@ class _PraticienAllConsultationScreenState
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
+                                    //  String referenceConsultation =
+                                    //       consultation['reference'];
                                     ElevatedButton(
                                       onPressed: () {
                                         // Utiliser la référence de la consultation
@@ -318,15 +322,52 @@ class _PraticienAllConsultationScreenState
                                         ),
                                       ),
                                     ),
+
                                     ElevatedButton(
-                                      onPressed: () {
-                                        // Logique pour rejeter
+                                      onPressed: () async {
+                                        String reference =
+                                            consultation['reference'];
+                                        bool? confirmation = await showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              title: Text('Confirmation'),
+                                              content: Text(
+                                                  'Êtes-vous sûr de vouloir rejeter cette consultation ?'),
+                                              actions: <Widget>[
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop(
+                                                        false); // Retourne false si on annule
+                                                  },
+                                                  child: Text('Annuler'),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop(
+                                                        true); // Retourne true si on confirme
+                                                  },
+                                                  child: Text('Confirmer'),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+
+                                        // Si l'utilisateur a confirmé, on appelle la fonction de rejet
+                                        if (confirmation == true) {
+                                          await ConsultationService()
+                                              .rejectConsultation(reference);
+                                          // Ajouter une notification ou un feedback ici si nécessaire
+                                            await fetchAndSetConsultations();
+                                        }
                                       },
                                       child: Text(
                                         'Rejeter',
                                         style: TextStyle(
-                                            color: Colors.white,
-                                            fontFamily: policePoppins),
+                                          color: Colors.white,
+                                          fontFamily: policePoppins,
+                                        ),
                                       ),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Color(0xFFC98181),

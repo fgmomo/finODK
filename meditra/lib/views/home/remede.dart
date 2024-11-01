@@ -4,7 +4,7 @@ import 'package:meditra/config/config.dart';
 import 'package:meditra/views/home/RemedeListScreen.dart';
 
 class RemedeScreen extends StatefulWidget {
-    const RemedeScreen({Key? key}) : super(key: key);
+  const RemedeScreen({Key? key}) : super(key: key);
   @override
   _RemedeScreenState createState() => _RemedeScreenState();
 }
@@ -69,7 +69,6 @@ class _RemedeScreenState extends State<RemedeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        
         scrolledUnderElevation: 0,
         title: const Text(
           'Remèdes',
@@ -202,67 +201,67 @@ class _RemedeScreenState extends State<RemedeScreen> {
   }
 
 // Affiche une boîte de dialogue avec la description complète de la maladie
-void _showDescriptionDialog(
-    BuildContext context, String? nom, String? description) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text(
-          nom ?? '',
-          style: const TextStyle(
-            fontFamily: policePoppins,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Text(
-          description ?? '',
-          style: const TextStyle(
-            fontFamily: policePoppins,
-            fontSize: 14,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Ferme le modal
-            },
-            child: const Text(
-              'Fermer',
-              style: TextStyle(
-                fontFamily: policePoppins,
-                fontSize: 14,
-                color: Colors.black,
-              ),
+  void _showDescriptionDialog(
+      BuildContext context, String? nom, String? description) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            nom ?? '',
+            style: const TextStyle(
+              fontFamily: policePoppins,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Ferme d'abord le modal
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => RemedeListScreen(
-                    nomMaladie: nom ?? '',
-                    descriptionMaladie: description ?? '',
-                  ),
+          content: Text(
+            description ?? '',
+            style: const TextStyle(
+              fontFamily: policePoppins,
+              fontSize: 14,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Ferme le modal
+              },
+              child: const Text(
+                'Fermer',
+                style: TextStyle(
+                  fontFamily: policePoppins,
+                  fontSize: 14,
+                  color: Colors.black,
                 ),
-              );
-            },
-            child: const Text(
-              'Voir les remèdes',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontFamily: policePoppins,
-                fontSize: 16,
-                color: couleurPrincipale,
               ),
             ),
-          ),
-        ],
-      );
-    },
-  );
-}
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Ferme d'abord le modal
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RemedeListScreen(
+                      nomMaladie: nom ?? '',
+                      descriptionMaladie: description ?? '',
+                    ),
+                  ),
+                );
+              },
+              child: const Text(
+                'Voir les remèdes',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: policePoppins,
+                  fontSize: 16,
+                  color: couleurPrincipale,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }

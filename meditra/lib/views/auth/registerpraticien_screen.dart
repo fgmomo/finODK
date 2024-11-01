@@ -355,69 +355,72 @@ class _RegisterPraticienScreenState extends State<RegisterPraticienScreen> {
       });
     }
   }
+Future<void> register() async {
+  try {
+    // Crée un nouvel utilisateur avec Firebase Auth
+    UserCredential userCredential = await FirebaseAuth.instance
+        .createUserWithEmailAndPassword(
+            email: emailController.text.trim(),
+            password: passwordController.text);
 
-  Future<void> register() async {
-    try {
-      // Créez un nouvel utilisateur avec Firebase Auth
-      UserCredential userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-              email: emailController.text.trim(),
-              password: passwordController.text);
+    // Initialisez les URLs à null
+    String? photoUrl;
+    String? justificatifUrl;
 
-      // Upload des images et récupérer leurs URLs après la création de l'utilisateur
-      String? photoUrl;
-      String? justificatifUrl;
+    // Upload de la photo de profil
+    if (_selectedPhoto != null) {
+      photoUrl = await _uploadFile(_selectedPhoto!, 'photos_profil/${userCredential.user?.uid}');
+    }
 
-      // Upload de la photo de profil
-      if (_selectedPhoto != null) {
-        photoUrl = await _uploadFile(
-            _selectedPhoto!, 'photos_profil/${userCredential.user?.uid}');
-      }
+    // Upload du justificatif
+    if (_selectedJustificatifPhoto != null) {
+      justificatifUrl = await _uploadFile(_selectedJustificatifPhoto!, 'justificatifs/${userCredential.user?.uid}');
+    }
 
-      // Upload du justificatif
-      if (_selectedJustificatifPhoto != null) {
-        justificatifUrl = await _uploadFile(_selectedJustificatifPhoto!,
-            'justificatifs/${userCredential.user?.uid}');
-      }
+    print("URL de la photo de profil : $photoUrl");
+    print("URL du justificatif : $justificatifUrl");
 
+    // Assurez-vous que les URLs ne sont pas nulles avant d'enregistrer dans Firestore
+    if (photoUrl != null && justificatifUrl != null) {
       // Enregistrez les informations de l'utilisateur dans Firestore
       await FirebaseFirestore.instance
           .collection('praticiens')
           .doc(userCredential.user?.uid)
           .set({
-        'firstName': firstNameController.text,
-        'lastName': lastNameController.text,
-        'email': emailController.text,
-        'address': addressController.text,
-        'professionalNumber': professionalNumberController.text,
-        'justification': justificationController.text,
-        'photoUrl': photoUrl, // Enregistrez l'URL de la photo
-        'justificatifUrl': justificatifUrl, // Enregistrez l'URL du justificatif
-      });
+            'firstName': firstNameController.text,
+            'lastName': lastNameController.text,
+            'email': emailController.text,
+            'address': addressController.text,
+            'professionalNumber': professionalNumberController.text,
+            'justification': justificationController.text,
+            'justificatifUrl': justificatifUrl,
+            'photoUrl': photoUrl,
+          });
 
-      // Montrez le message de succès
       _showSuccessDialog(context);
-    } catch (e) {
-      print("Erreur lors de l'inscription : $e");
+    } else {
       setState(() {
-        errorMessage = "Erreur lors de l'inscription : ${e.toString()}";
+        errorMessage = "Échec de l'upload des images. Veuillez réessayer.";
       });
     }
+  } catch (e) {
+    setState(() {
+      errorMessage = "Erreur : $e";
+    });
   }
+}
 
-  Future<String?> _uploadFile(File file, String filePath) async {
-    try {
-      final Reference storageReference =
-          FirebaseStorage.instance.ref().child(filePath);
-      final UploadTask uploadTask = storageReference.putFile(file);
-      final TaskSnapshot snapshot = await uploadTask;
-      String downloadUrl = await snapshot.ref.getDownloadURL();
-      return downloadUrl; // retourne l'URL de téléchargement
-    } catch (e) {
-      print('Error uploading file: $e');
-      return null; // Retourne null en cas d'erreur
-    }
+ 
+Future<String?> _uploadFile(File file, String path) async {
+  try {
+    final ref = FirebaseStorage.instance.ref().child(path);
+    final uploadTask = await ref.putFile(file);
+    return await ref.getDownloadURL();
+  } catch (e) {
+    print("Erreur lors du téléchargement de l'image : $e");
+    return null;
   }
+}
 
   void _resetFields() {
     firstNameController.clear();
