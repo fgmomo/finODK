@@ -10,7 +10,8 @@ import 'package:meditra/config/config.dart';
 class DiscussionPage extends StatefulWidget {
   final String discussionId;
 
-  const DiscussionPage({Key? key, required this.discussionId}) : super(key: key);
+  const DiscussionPage({Key? key, required this.discussionId})
+      : super(key: key);
 
   @override
   _DiscussionPageState createState() => _DiscussionPageState();
@@ -22,11 +23,16 @@ class _DiscussionPageState extends State<DiscussionPage> {
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final TextEditingController _messageController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
-
+  bool _isSending = false;
   Future<void> _sendMessage(String message, {String? imageUrl}) async {
+  if (_isSending) return; // Pour éviter plusieurs envois en même temps
+  setState(() {
+    _isSending = true;
+  });
+  Future.microtask(() async => await _sendMessage(_messageController.text));
+
   try {
     String currentUserId = _auth.currentUser?.uid ?? '';
-
     await _firestore
         .collection('discussions')
         .doc(widget.discussionId)
@@ -41,7 +47,12 @@ class _DiscussionPageState extends State<DiscussionPage> {
     _messageController.clear();
   } catch (e) {
     print("Erreur lors de l'envoi du message : $e");
-    // Vous pouvez ici définir une couleur de feedback en cas d'erreur.
+  } finally {
+    // Petite temporisation pour permettre à l'interface de se stabiliser
+    await Future.delayed(Duration(milliseconds: 200));
+    setState(() {
+      _isSending = false;
+    });
   }
 }
 
@@ -97,7 +108,8 @@ class _DiscussionPageState extends State<DiscussionPage> {
 
   Future<void> _editMessage(String messageId, String currentMessage) async {
     // Déclaration du TextEditingController
-    TextEditingController controller = TextEditingController(text: currentMessage);
+    TextEditingController controller =
+        TextEditingController(text: currentMessage);
 
     String? editedMessage = await showDialog<String>(
       context: context,
@@ -120,7 +132,8 @@ class _DiscussionPageState extends State<DiscussionPage> {
             TextButton(
               onPressed: () {
                 // Vérification que le texte n'est pas vide avant de le retourner
-                Navigator.of(context).pop(controller.text.isNotEmpty ? controller.text : null);
+                Navigator.of(context)
+                    .pop(controller.text.isNotEmpty ? controller.text : null);
               },
               child: Text('Modifier'),
             ),
@@ -149,6 +162,7 @@ class _DiscussionPageState extends State<DiscussionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         title: Text("Discussion"),
       ),
       body: Column(
@@ -181,7 +195,7 @@ class _DiscussionPageState extends State<DiscussionPage> {
                     DateTime sentAt =
                         (messageData['sentAt'] as Timestamp).toDate();
 
-                     return GestureDetector(
+                    return GestureDetector(
                       onLongPress: () {
                         if (isCurrentUser) {
                           showDialog(
@@ -192,7 +206,8 @@ class _DiscussionPageState extends State<DiscussionPage> {
                                 TextButton.icon(
                                   onPressed: () {
                                     Navigator.of(context).pop();
-                                    _editMessage(messageId, messageData['message']);
+                                    _editMessage(
+                                        messageId, messageData['message']);
                                   },
                                   icon: Icon(Icons.check, color: Colors.blue),
                                   label: Text('Modifier',
@@ -318,37 +333,40 @@ class _DiscussionPageState extends State<DiscussionPage> {
     );
   }
 
-  Widget _buildMessageInputField() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(
-        children: [
-           IconButton(
-            icon: Icon(Icons.photo,color: couleurPrincipale,),
-            onPressed: _pickImage,
-          ),
-          Expanded(
-            child: TextField(
-              controller: _messageController,
-              decoration: InputDecoration(
-                hintText: 'Écrivez votre message...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
+ Widget _buildMessageInputField() {
+  return Padding(
+    padding: const EdgeInsets.all(8.0),
+    child: Row(
+      children: [
+        IconButton(
+          icon: Icon(Icons.photo, color: couleurPrincipale),
+          onPressed: _pickImage,
+        ),
+        Expanded(
+          child: TextField(
+            controller: _messageController,
+            decoration: InputDecoration(
+              hintText: 'Écrivez votre message...',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
               ),
             ),
           ),
-          IconButton(
-            icon: Icon(Icons.send,color: couleurPrincipale,),
-            onPressed: () {
-              if (_messageController.text.isNotEmpty) {
-                _sendMessage(_messageController.text);
-              }
-            },
-          ),
-         
-        ],
-      ),
-    );
-  }
+        ),
+        _isSending
+            ? CircularProgressIndicator() // Indicateur de chargement pendant l'envoi
+            : IconButton(
+                icon: Icon(Icons.send, color: couleurPrincipale),
+                onPressed: _isSending
+                    ? null // Désactive le bouton s'il est en train d'envoyer
+                    : () {
+                        if (_messageController.text.isNotEmpty) {
+                          _sendMessage(_messageController.text);
+                        }
+                      },
+              ),
+      ],
+    ),
+  );
+}
 }

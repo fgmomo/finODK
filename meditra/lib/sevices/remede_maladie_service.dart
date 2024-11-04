@@ -5,41 +5,37 @@ class RemedeMaladieService {
 
   // Méthode pour récupérer les remèdes et maladies associés
   Stream<List<Map<String, dynamic>>> getRemedesAndMaladies() {
-    return _firestore
-        .collection('remede_maladie')
-        .snapshots()
-        .asyncMap((snapshot) async {
-      List<Map<String, dynamic>> remedesMaladies = [];
+  return _firestore.collection('remede_maladie').snapshots().asyncMap((snapshot) async {
+    // Récupérer tous les documents de remèdes et maladies en une seule fois
+    final remedeRefs = snapshot.docs.map((doc) => doc['remede_ref']).toList();
+    final maladieRefs = snapshot.docs.map((doc) => doc['maladie_ref']).toList();
+    
+    // Récupérer les remèdes et maladies en utilisant des Future
+    final remedesFuture = Future.wait(remedeRefs.map((ref) => ref.get()));
+    final maladiesFuture = Future.wait(maladieRefs.map((ref) => ref.get()));
 
-      for (var doc in snapshot.docs) {
-        // Récupérer les références de maladie et remède
-        DocumentReference maladieRef = doc['maladie_ref'];
-        DocumentReference remedeRef = doc['remede_ref'];
+    final remedesSnapshots = await remedesFuture;
+    final maladiesSnapshots = await maladiesFuture;
 
-        // Récupérer les données du remède et de la maladie
-        DocumentSnapshot maladieSnapshot = await maladieRef.get();
-        DocumentSnapshot remedeSnapshot = await remedeRef.get();
+    List<Map<String, dynamic>> remedesMaladies = [];
 
-        // Vérifier que les deux documents existent
-        if (maladieSnapshot.exists && remedeSnapshot.exists) {
-          Map<String, dynamic> maladieData =
-              maladieSnapshot.data() as Map<String, dynamic>;
-          Map<String, dynamic> remedeData =
-              remedeSnapshot.data() as Map<String, dynamic>;
+    for (int i = 0; i < snapshot.docs.length; i++) {
+      final remedeData = remedesSnapshots[i].data();
+      final maladieData = maladiesSnapshots[i].data();
 
-          remedesMaladies.add({
-            'maladie': maladieData,
-            'remede': remedeData,
-            'maladie_ref':
-                maladieSnapshot.reference, // Assurez-vous que cela existe
-            'remede_ref':
-                remedeSnapshot.reference, // Assurez-vous que cela existe
-          });
-        }
+      if (remedeData != null && maladieData != null) {
+        remedesMaladies.add({
+          'maladie': maladieData,
+          'remede': remedeData,
+          'maladie_ref': maladiesSnapshots[i].reference,
+          'remede_ref': remedesSnapshots[i].reference,
+        });
       }
-      return remedesMaladies;
-    });
-  }
+    }
+
+    return remedesMaladies;
+  });
+}
 
 
   // Méthode pour récupérer la liste des maladies
@@ -58,14 +54,16 @@ class RemedeMaladieService {
         .toList();
   }
 
-    // Méthode pour associer un remède à une maladie
- Future<void> associerRemedeMaladie(String remedeId, String maladieId) async {
+  // Méthode pour associer un remède à une maladie
+  Future<void> associerRemedeMaladie(String remedeId, String maladieId) async {
     try {
       // Vérifier si l'association existe déjà
       QuerySnapshot existingAssociation = await _firestore
           .collection('remede_maladie')
-          .where('remede_ref', isEqualTo: _firestore.collection('remedes').doc(remedeId))
-          .where('maladie_ref', isEqualTo: _firestore.collection('maladies').doc(maladieId))
+          .where('remede_ref',
+              isEqualTo: _firestore.collection('remedes').doc(remedeId))
+          .where('maladie_ref',
+              isEqualTo: _firestore.collection('maladies').doc(maladieId))
           .get();
 
       if (existingAssociation.docs.isNotEmpty) {
@@ -87,29 +85,30 @@ class RemedeMaladieService {
   }
 
   // Méthode pour dissocier un remède d'une maladie
- Future<void> dissocierRemedeMaladie(Map<String, dynamic> remedeMaladie) async {
-  final remedeRef = remedeMaladie['remede_ref'];
-  final maladieRef = remedeMaladie['maladie_ref'];
+  Future<void> dissocierRemedeMaladie(
+      Map<String, dynamic> remedeMaladie) async {
+    final remedeRef = remedeMaladie['remede_ref'];
+    final maladieRef = remedeMaladie['maladie_ref'];
 
-  if (remedeRef != null && maladieRef != null) {
-    try {
-      // Logique pour dissocier le remède et la maladie (suppression du document dans remede_maladie)
-      await _firestore
-          .collection('remede_maladie')
-          .where('remede_ref', isEqualTo: remedeRef)
-          .where('maladie_ref', isEqualTo: maladieRef)
-          .get()
-          .then((snapshot) {
-        for (var doc in snapshot.docs) {
-          doc.reference.delete();
-        }
-      });
-      print('Dissociation réussie.');
-    } catch (e) {
-      print('Erreur lors de la dissociation: $e');
+    if (remedeRef != null && maladieRef != null) {
+      try {
+        // Logique pour dissocier le remède et la maladie (suppression du document dans remede_maladie)
+        await _firestore
+            .collection('remede_maladie')
+            .where('remede_ref', isEqualTo: remedeRef)
+            .where('maladie_ref', isEqualTo: maladieRef)
+            .get()
+            .then((snapshot) {
+          for (var doc in snapshot.docs) {
+            doc.reference.delete();
+          }
+        });
+        print('Dissociation réussie.');
+      } catch (e) {
+        print('Erreur lors de la dissociation: $e');
+      }
+    } else {
+      print('Erreur: Référence de remède ou de maladie est null.');
     }
-  } else {
-    print('Erreur: Référence de remède ou de maladie est null.');
   }
-}
 }

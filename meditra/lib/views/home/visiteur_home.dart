@@ -6,6 +6,7 @@ import 'package:meditra/sevices/full_name_service.dart';
 import 'package:meditra/sevices/maladie_service.dart';
 import 'package:meditra/sevices/plante_service.dart';
 import 'package:meditra/views/home/DetailsCentre.dart';
+import 'package:meditra/views/home/RemedeListScreen.dart';
 import 'package:meditra/views/home/centres.dart';
 import 'package:meditra/views/home/consultation_approuve.dart';
 import 'package:meditra/views/home/detail_plante.dart';
@@ -455,10 +456,15 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   InkWell(
-                                    onTap: () {
-                                      print("Icône cliquée !");
-                              
-                                    },
+                                  onTap: () {
+            print("Icône cliquée !");
+            // Affiche le modal ou redirige avec les attributs corrects
+            _showDescriptionDialog(
+              context,
+              maladies[index].nom,       // Utilisez les attributs de l'objet
+              maladies[index].description,
+            );
+          },
                                     borderRadius: BorderRadius.circular(50),
                                     child: Container(
                                       decoration: BoxDecoration(
@@ -497,7 +503,9 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
                     return Center(child: Text('Aucune maladie trouvée.'));
                   }
                 },
+                
               ),
+              
               //----------------------------------------------------------------
               // Section Explorez nos plantes
               Row(
@@ -918,6 +926,71 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
           ),
         ),
       ),
+    );
+  }
+  
+ // Affiche une boîte de dialogue avec la description complète de la maladie
+  void _showDescriptionDialog(
+      BuildContext context, String? nom, String? description) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            nom ?? '',
+            style: const TextStyle(
+              fontFamily: policePoppins,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            description ?? '',
+            style: const TextStyle(
+              fontFamily: policePoppins,
+              fontSize: 14,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Ferme le modal
+              },
+              child: const Text(
+                'Fermer',
+                style: TextStyle(
+                  fontFamily: policePoppins,
+                  fontSize: 14,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Ferme d'abord le modal
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RemedeListScreen(
+                      nomMaladie: nom ?? '',
+                      descriptionMaladie: description ?? '',
+                    ),
+                  ),
+                );
+              },
+              child: const Text(
+                'Voir les remèdes',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: policePoppins,
+                  fontSize: 16,
+                  color: couleurPrincipale,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

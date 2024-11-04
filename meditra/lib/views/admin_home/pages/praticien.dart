@@ -121,13 +121,11 @@ class _PraticienPageState extends State<PraticienPage> {
                                 : Colors.grey[100],
                           ),
                           children: [
-                            _buildTableCell(praticien['firstName'] +
-                                ' ' +
-                                praticien['lastName']),
+                            _buildTableCell(praticien['firstName'] ?? '' + ' ' + praticien['lastName'] ?? ''),
                             // _buildTableCell(praticien['address']),
                             // _buildTableCell(praticien['professionalNumber']),
-                            _buildTableCell(praticien['status']),
-                            _buildStatusBadge(praticien['isActive']),
+                            _buildTableCell(praticien['status'] ?? 'Non spécifié'),
+                            _buildStatusBadge(praticien['isActive'] ?? false),
                             _buildTableCellWithActions(praticien),
                           ],
                         );

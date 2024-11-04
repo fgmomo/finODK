@@ -46,6 +46,7 @@ class RegisterPraticienService {
         'status': 'en attente', // Statut par défaut
         'email': email,
         'role': 'praticien',
+        'isActive':true,
       });
 
       return "Inscription réussie ! Un email de confirmation a été envoyé.";

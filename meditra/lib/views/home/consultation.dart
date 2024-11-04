@@ -3,7 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:meditra/config/config.dart';
 import 'package:meditra/sevices/consultation_service.dart';
+import 'package:meditra/views/home/confirmationConsultation_dialog.dart';
 import 'package:meditra/views/home/visiteur_consultation_all.dart';
+import 'package:meditra/views/home_praticien/approbation_modal.dart';
 
 class VisiteurConsultationScreen extends StatefulWidget {
   const VisiteurConsultationScreen({super.key});
@@ -84,6 +86,7 @@ class _VisiteurConsultationScreenState
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         backgroundColor: Colors.white,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,20 +101,6 @@ class _VisiteurConsultationScreenState
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.notifications,
-              color: couleurPrincipale,
-              size: 35,
-            ),
-            onPressed: () {
-              // Logique de notification
-            },
-            padding: EdgeInsets.all(10),
-            tooltip: 'Notifications',
-          ),
-        ],
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1.0),
           child: Container(
@@ -124,41 +113,42 @@ class _VisiteurConsultationScreenState
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-            children: [  
-                ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const VisiteurConsultationAllScreen(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.remove_red_eye, color: Colors.white),
-                    label: const Text(
-                      'Mes consultations',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
-                      ),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const VisiteurConsultationAllScreen(),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: couleurPrincipale,
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 13, horizontal: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
+                  );
+                },
+                icon: const Icon(Icons.remove_red_eye, color: Colors.white),
+                label: const Text(
+                  'Mes consultations',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
                   ),
-             const Divider(
-              color: Colors.grey,
-              thickness: 0.5,
-              indent: 16,
-              endIndent: 18,
-            ),
-            
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: couleurPrincipale,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 13, horizontal: 18),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const Divider(
+                color: Colors.grey,
+                thickness: 0.5,
+                indent: 16,
+                endIndent: 18,
+              ),
+
               // Barre de recherche
               TextField(
                 onChanged: (value) {
@@ -351,12 +341,11 @@ class _VisiteurConsultationScreenState
                                             ElevatedButton(
                                               onPressed: () async {
                                                 if (visiteurId != null) {
-                                                  // Utiliser l'ID du visiteur pour créer une consultation
                                                   String message =
                                                       _messageController
                                                           .text; // Récupère le message du TextField
                                                   String crenauId = crenau[
-                                                      'id']; // Récupère l'ID du créneau ici.
+                                                      'id']; // Récupère l'ID du créneau
 
                                                   final consultationService =
                                                       ConsultationService();
@@ -367,12 +356,13 @@ class _VisiteurConsultationScreenState
                                                           .hasExistingConsultation(
                                                               crenauId,
                                                               visiteurId!);
-                                                  // Réinitialiser le champ de texte après l'envoi réussi
-                                                  _messageController.clear();
-                                                    Navigator.of(context)
-                                                          .pop();
+
                                                   if (hasExistingAppointment) {
                                                     // Si le visiteur a déjà un RDV, afficher un message d'erreur
+                                                    _messageController
+                                                        .clear(); // Réinitialiser le champ de texte
+                                                    Navigator.of(context)
+                                                        .pop(); // Fermer le modal de formulaire
                                                     showDialog(
                                                       context: context,
                                                       builder: (BuildContext
@@ -482,117 +472,21 @@ class _VisiteurConsultationScreenState
                                                               crenauId,
                                                               message,
                                                               visiteurId!);
-                                                      // Réinitialiser le champ de texte après l'envoi réussi
                                                       _messageController
-                                                          .clear();
-                                                      Navigator.of(context)
-                                                          .pop(); // Fermer le modal après l'envoi
+                                                          .clear(); // Réinitialiser le champ de texte après l'envoi réussi
 
-                                                      // Afficher le message de confirmation
+                                                      // Afficher le message de confirmation dans un nouveau modal
                                                       showDialog(
                                                         context: context,
                                                         builder: (BuildContext
                                                             context) {
-                                                          return AlertDialog(
-                                                            backgroundColor:
-                                                                Colors.white,
-                                                            shape:
-                                                                RoundedRectangleBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          16),
-                                                            ),
-                                                            content: Column(
-                                                              mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .min,
-                                                              children: [
-                                                                Container(
-                                                                  decoration:
-                                                                      BoxDecoration(
-                                                                    shape: BoxShape
-                                                                        .circle,
-                                                                    color: Colors
-                                                                        .green,
-                                                                  ),
-                                                                  padding:
-                                                                      EdgeInsets
-                                                                          .all(
-                                                                              16),
-                                                                  child: Icon(
-                                                                    Icons.check,
-                                                                    size: 40,
-                                                                    color: Colors
-                                                                        .white,
-                                                                  ),
-                                                                ),
-                                                                SizedBox(
-                                                                    height: 20),
-                                                                Text(
-                                                                  'Demande envoyée avec succès',
-                                                                  style:
-                                                                      TextStyle(
-                                                                    fontFamily:
-                                                                        policePoppins,
-                                                                    fontSize:
-                                                                        18,
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .bold,
-                                                                    color:
-                                                                        couleurPrincipale,
-                                                                  ),
-                                                                  textAlign:
-                                                                      TextAlign
-                                                                          .center,
-                                                                ),
-                                                                SizedBox(
-                                                                    height: 10),
-                                                                Text(
-                                                                  'Votre demande de consultation a bien été envoyée. Un praticien vous contactera bientôt.',
-                                                                  style:
-                                                                      TextStyle(
-                                                                    fontFamily:
-                                                                        policePoppins,
-                                                                    fontSize:
-                                                                        15,
-                                                                    color: Colors
-                                                                            .grey[
-                                                                        700],
-                                                                  ),
-                                                                  textAlign:
-                                                                      TextAlign
-                                                                          .center,
-                                                                ),
-                                                                SizedBox(
-                                                                    height: 20),
-                                                              ],
-                                                            ),
-                                                            actions: [
-                                                              TextButton(
-                                                                onPressed: () {
-                                                                  Navigator.of(
-                                                                          context)
-                                                                      .pop(); // Fermer le message de confirmation
-                                                                },
-                                                                child: Text(
-                                                                  'Fermer',
-                                                                  style:
-                                                                      TextStyle(
-                                                                    fontFamily:
-                                                                        policePoppins,
-                                                                    color:
-                                                                        couleurPrincipale,
-                                                                    fontSize:
-                                                                        16,
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          );
+                                                          return ConfirmationDialog1(); // Assurez-vous que ce widget est bien défini
                                                         },
-                                                      );
+                                                      ).then((_) {
+                                                        // Fermer le modal de formulaire après la confirmation
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      });
                                                     } catch (e) {
                                                       // Gérer l'erreur
                                                       print(e);
