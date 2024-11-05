@@ -24,9 +24,10 @@ class AuthAdminService {
 
         // Ajouter les informations de l'admin dans Firestore
         await adminCollection.doc(userCredential.user!.uid).set({
-          'firstName': 'Admin',
-          'lastName': 'Default',
+          'firstName': 'Adama',
+          'lastName': 'Guindo',
           'email': defaultEmail,
+          'isActive': true,
         });
         print("Admin par défaut créé avec succès.");
       } else {

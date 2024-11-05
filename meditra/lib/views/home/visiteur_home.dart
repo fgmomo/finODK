@@ -451,50 +451,51 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
                           itemCount: maladies.length, // Nombre de maladies
                           itemBuilder: (context, index) {
                             return Container(
-                              width: 100,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  InkWell(
-                                  onTap: () {
+  width: 100,
+  height: 100, // Gardez cette hauteur pour le conteneur
+  child: SingleChildScrollView(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        InkWell(
+          onTap: () {
             print("Icône cliquée !");
-            // Affiche le modal ou redirige avec les attributs corrects
             _showDescriptionDialog(
               context,
-              maladies[index].nom,       // Utilisez les attributs de l'objet
+              maladies[index].nom,
               maladies[index].description,
             );
           },
-                                    borderRadius: BorderRadius.circular(50),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color:
-                                            couleurSecondaire, // Couleur de fond de l'icône
-                                      ),
-                                      padding: EdgeInsets.all(15),
-                                      child: Icon(
-                                        Icons
-                                            .local_hospital_rounded, // Icône représentant la maladie
-                                        size: 30,
-                                        color:
-                                            couleurPrincipale, // Couleur de l'icône
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(height: 5),
-                                  Text(
-                                    maladies[index].nom, // Nom de la maladie
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontFamily: policePoppins,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
+          borderRadius: BorderRadius.circular(50),
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: couleurSecondaire,
+            ),
+            padding: EdgeInsets.all(15),
+            child: Icon(
+              Icons.local_hospital_rounded,
+              size: 30,
+              color: couleurPrincipale,
+            ),
+          ),
+        ),
+        SizedBox(height: 5),
+        Text(
+          maladies[index].nom,
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 2,
+          style: TextStyle(
+            color: Colors.black,
+            fontFamily: policePoppins,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    ),
+  ),
+);
                           },
                         ),
                       ),
@@ -503,9 +504,8 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
                     return Center(child: Text('Aucune maladie trouvée.'));
                   }
                 },
-                
               ),
-              
+SizedBox(height: 30),
               //----------------------------------------------------------------
               // Section Explorez nos plantes
               Row(
@@ -928,8 +928,8 @@ class _VisitorHomeScreenState extends State<VisitorHomeScreen> {
       ),
     );
   }
-  
- // Affiche une boîte de dialogue avec la description complète de la maladie
+
+  // Affiche une boîte de dialogue avec la description complète de la maladie
   void _showDescriptionDialog(
       BuildContext context, String? nom, String? description) {
     showDialog(

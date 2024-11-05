@@ -151,7 +151,7 @@ class _PlanteScreenState extends State<PlanteScreen> {
               padding: const EdgeInsets.all(15),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(10.0),
                 ),
                 child: TextField(

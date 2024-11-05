@@ -42,6 +42,7 @@ class _DetailPlanteScreenState extends State<DetailPlanteScreen>
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         title: const Text(
           'Détails de la Plante', // Titre de l'AppBar
           style: TextStyle(
@@ -51,7 +52,7 @@ class _DetailPlanteScreenState extends State<DetailPlanteScreen>
         ),
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.black),
-        elevation: 1,
+        // elevation: ,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0), // Bordure fine
           child: Container(

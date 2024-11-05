@@ -41,6 +41,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         backgroundColor: Colors.white,
         title: const Text(
           'Détails de l\'article',
@@ -221,7 +222,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
               ),
 
               // Ajout des avis statiques ici
-              const SizedBox(height: 1), // Espacement avant la section des avis
+              const SizedBox(height: 3), // Espacement avant la section des avis
               TextButton(
                 onPressed: () {
                   setState(() {

@@ -163,7 +163,7 @@ class _VisiteurConsultationScreenState
                     borderRadius: BorderRadius.circular(10),
                   ),
                   filled: true,
-                  fillColor: Colors.grey[200],
+                  fillColor: Colors.white,
                 ),
               ),
               SizedBox(height: 15),

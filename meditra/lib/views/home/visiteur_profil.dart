@@ -171,11 +171,11 @@ class _VisitorProfilScreenState extends State<VisitorProfilScreen> {
                       },
                     ),
                     _buildDivider(),
-                    _buildListItem(
-                      icon: Icons.help_outline,
-                      title: 'Aide',
-                      onTap: () {},
-                    ),
+                    // _buildListItem(
+                    //   icon: Icons.help_outline,
+                    //   title: 'Aide',
+                    //   onTap: () {},
+                    // ),
                     _buildDivider(),
                     _buildListItem(
                       icon: Icons.privacy_tip_outlined,

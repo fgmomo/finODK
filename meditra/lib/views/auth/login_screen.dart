@@ -20,6 +20,92 @@ class _LoginScreenState extends State<LoginScreen> {
   String errorMessage = '';
   bool isLoading = false; // Pour gérer l'état de chargement
 
+  @override
+  void initState() {
+    super.initState();
+    // Vérification de l'état de l'utilisateur lors du démarrage
+    checkUserLoggedIn();
+  }
+
+  Future<void> checkUserLoggedIn() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      // L'utilisateur est déjà connecté
+      await navigateToHome(user);
+    }
+  }
+
+Future<void> navigateToHome(User user) async {
+  // Vérification dans la collection "visiteurs"
+  DocumentSnapshot visitorDoc = await FirebaseFirestore.instance
+      .collection('visiteurs')
+      .doc(user.uid)
+      .get();
+
+  if (visitorDoc.exists) {
+    bool isActive = visitorDoc.get('isActive');
+
+    if (isActive) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => AccueilVisitorHomeScreen()),
+      );
+    } else {
+      setState(() {
+        errorMessage = "Votre compte de visiteur est désactivé.";
+        isLoading = false; // Arrêter le chargement
+      });
+    }
+    return;
+  }
+  // Vérification dans la collection "praticiens"
+  DocumentSnapshot praticienDoc = await FirebaseFirestore.instance
+      .collection('praticiens')
+      .doc(user.uid)
+      .get();
+
+  if (praticienDoc.exists) {
+    // Récupérer les informations de statut et d'activation
+    String status = praticienDoc.get('status');
+    bool isActive = praticienDoc.get('isActive');
+
+    // Vérifier si le praticien est approuvé et actif
+    if (status == "approuvé" && isActive) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => AccueilPraticienHomeScreen()),
+      );
+      setState(() {
+        isLoading = false; // Arrêter le chargement
+      });
+    } else if (status == "en attente") {
+      setState(() {
+        errorMessage = "Vos informations sont en attente de vérification.";
+        isLoading = false; // Arrêter le chargement
+      });
+    } else if (!isActive) {
+      setState(() {
+        errorMessage = "Votre compte est désactivé.";
+        isLoading = false; // Arrêter le chargement
+      });
+    }
+    else {
+      // Cas où le statut est inconnu
+      setState(() {
+        errorMessage = "Statut du compte inconnu. Veuillez contacter le support.";
+        isLoading = false; // Arrêter le chargement
+      });
+    }
+    return;
+  }
+
+  // Dans le cas où aucun document correspondant n'est trouvé
+  setState(() {
+    errorMessage = "Compte non trouvé.";
+    isLoading = false; // Arrêter le chargement
+  });
+}
+
   Future<void> login() async {
     setState(() {
       errorMessage = '';
@@ -47,89 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
       User? user = userCredential.user;
 
       if (user != null) {
-        // Vérification dans la collection "visiteurs"
-        DocumentSnapshot visitorDoc = await FirebaseFirestore.instance
-            .collection('visiteurs')
-            .doc(user.uid)
-            .get();
-
-        if (visitorDoc.exists) {
-          Map<String, dynamic>? visitorData =
-              visitorDoc.data() as Map<String, dynamic>?;
-          bool isActive = visitorData?['isActive'] ??
-              true; // Par défaut, true s'il n'existe pas
-
-          if (!isActive) {
-            setState(() {
-              errorMessage =
-                  'Votre compte a été désactivé par l\'administrateur.';
-              isLoading = false; // Arrête le chargement
-            });
-            return;
-          }
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => AccueilVisitorHomeScreen()),
-          );
-          return;
-        }
-
-        // Vérification dans la collection "praticiens"
-        DocumentSnapshot praticienDoc = await FirebaseFirestore.instance
-            .collection('praticiens')
-            .doc(user.uid)
-            .get();
-
-        if (praticienDoc.exists) {
-          Map<String, dynamic>? praticienData =
-              praticienDoc.data() as Map<String, dynamic>?;
-
-          if (praticienData != null) {
-            // Vérification du champ isActive
-            bool isActive = praticienData['isActive'] ??
-                true; // Par défaut, true si non défini
-
-            if (!isActive) {
-              setState(() {
-                errorMessage =
-                    'Votre compte a été désactivé par l\'administrateur.';
-                isLoading = false; // Arrête le chargement
-              });
-              return;
-            }
-
-            // Vérification du statut du praticien
-            String status = praticienData['status'] ?? 'inconnu';
-
-            if (status == 'en attente') {
-              setState(() {
-                errorMessage =
-                    'Vos informations sont en attente de vérification.';
-                isLoading = false; // Arrête le chargement
-              });
-              return;
-            } else if (status == 'rejeté') {
-              setState(() {
-                errorMessage =
-                    'Votre demande a été rejetée par l\'administration.';
-                isLoading = false; // Arrête le chargement
-              });
-              return;
-            } else if (status == 'approuvé') {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => AccueilPraticienHomeScreen()),
-              );
-              return;
-            }
-          }
-        }
-
-        setState(() {
-          errorMessage = 'Aucun rôle défini pour cet utilisateur.';
-          isLoading = false; // Arrête le chargement
-        });
+        await navigateToHome(user);
       }
     } catch (e) {
       print(e);
@@ -160,9 +164,8 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            
               SizedBox(height: 50),
-               if (errorMessage.isNotEmpty)
+              if (errorMessage.isNotEmpty)
                 Container(
                   padding: EdgeInsets.all(10),
                   color: Colors.redAccent,
@@ -178,21 +181,19 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                ), 
+                ),
               // Ajout du logo en haut du formulaire
               Center(
                 child: Image.asset(
-                  'assets/yiri2.png', // Chemin vers ton logo
-                  height: 120, // Hauteur de l'image
-                  width: 120, // Largeur de l'image
-                  fit: BoxFit
-                      .contain, // Option pour adapter l'image sans étirement
+                  'assets/yiri2.png',
+                  height: 120,
+                  width: 120,
+                  fit: BoxFit.contain,
                 ),
               ),
 
-              SizedBox(height: 10), // Espace entre le logo et le texte suivant
+              SizedBox(height: 10),
 
-              
               SizedBox(height: 15),
               Center(
                 child: Text(
@@ -241,14 +242,12 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: isLoading
-                      ? null
-                      : login, // Désactiver le bouton pendant le chargement
+                  onPressed: isLoading ? null : login,
                   child: isLoading
                       ? LoadingAnimationWidget.horizontalRotatingDots(
                           color: couleurPrincipale,
                           size: 30,
-                        ) // Affiche l'animation de chargement
+                        )
                       : Text(
                           'Connexion',
                           style: TextStyle(

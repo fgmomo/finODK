@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:meditra/config/config.dart';
@@ -21,6 +22,7 @@ class VisiteurAllArticleScreen extends StatefulWidget {
 
 class _VisiteurAllArticleScreenState extends State<VisiteurAllArticleScreen> {
   final ArticleService _articleService = ArticleService();
+
 
   @override
   void initState() {
@@ -57,6 +59,7 @@ class _VisiteurAllArticleScreenState extends State<VisiteurAllArticleScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         backgroundColor: Colors.white,
         title: const Text(
           'Articles',
@@ -192,42 +195,47 @@ class _VisiteurAllArticleScreenState extends State<VisiteurAllArticleScreen> {
                               article['imageUrl'] != null && article['imageUrl']!.isNotEmpty
                                   ? ClipRRect(
                                       borderRadius: BorderRadius.circular(10),
-                                      child: Image.network(
-                                        article['imageUrl']!,
-                                        height: 150,
-                                        width: double.infinity,
-                                        fit: BoxFit.cover,
-                                        loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
-                                          if (loadingProgress == null) return child;
-                                          return Shimmer.fromColors(
-                                            baseColor: Colors.grey[300]!,
-                                            highlightColor: Colors.grey[100]!,
-                                            child: Container(
-                                              height: 150,
-                                              width: double.infinity,
-                                              decoration: BoxDecoration(
-                                                color: Colors.grey[200],
-                                                borderRadius: BorderRadius.circular(10),
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                        errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
-                                          return Container(
-                                            height: 150,
-                                            width: double.infinity,
-                                            decoration: BoxDecoration(
-                                              color: Colors.grey[200],
-                                              borderRadius: BorderRadius.circular(10),
-                                            ),
-                                            child: Icon(
-                                              Icons.image,
-                                              size: 50,
-                                              color: Colors.grey,
-                                            ),
-                                          );
-                                        },
-                                      ),
+                                      child:  CachedNetworkImage(
+                                                  imageUrl:
+                                                      article['imageUrl']!,
+                                                  height: 150,
+                                                  width: double.infinity,
+                                                  fit: BoxFit.cover,
+                                                  placeholder: (context, url) =>
+                                                      Shimmer.fromColors(
+                                                    baseColor:
+                                                        Colors.grey[300]!,
+                                                    highlightColor:
+                                                        Colors.grey[100]!,
+                                                    child: Container(
+                                                      height: 150,
+                                                      width: double.infinity,
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.grey[200],
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(10),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  errorWidget:
+                                                      (context, url, error) =>
+                                                          Container(
+                                                    height: 150,
+                                                    width: double.infinity,
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.grey[200],
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+                                                    ),
+                                                    child: Icon(
+                                                      Icons.image,
+                                                      size: 50,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
+                                                ),
                                     )
                                   : Container(
                                       height: 150,

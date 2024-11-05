@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart'; // Import pour kIsWeb
 import 'package:meditra/FirebaseOptions.dart';
 import 'package:meditra/config/config.dart';
+import 'package:meditra/sevices/authadmin_service.dart';
 import 'package:meditra/views/admin_home/layouts/main_layout.dart';
 import 'package:meditra/views/auth/login_screen.dart'; // Page de login mobile (praticien/visiteur)
 import 'package:meditra/views/auth/login_screen_admin.dart'; // Page de login pour admin (web)
@@ -12,6 +13,11 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+    // Créer une instance du service Admin
+  AuthAdminService adminService = AuthAdminService();
+  
+  // Appel de la méthode pour créer un admin par défaut
+  await adminService.createDefaultAdmin();
   runApp(MyApp());
 }
 

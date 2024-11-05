@@ -10,8 +10,7 @@ import 'package:meditra/config/config.dart';
 class DiscussionPage extends StatefulWidget {
   final String discussionId;
 
-  const DiscussionPage({Key? key, required this.discussionId})
-      : super(key: key);
+  const DiscussionPage({Key? key, required this.discussionId}) : super(key: key);
 
   @override
   _DiscussionPageState createState() => _DiscussionPageState();
@@ -24,37 +23,45 @@ class _DiscussionPageState extends State<DiscussionPage> {
   final TextEditingController _messageController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
   bool _isSending = false;
+
   Future<void> _sendMessage(String message, {String? imageUrl}) async {
-  if (_isSending) return; // Pour éviter plusieurs envois en même temps
-  setState(() {
-    _isSending = true;
-  });
-  Future.microtask(() async => await _sendMessage(_messageController.text));
-
-  try {
-    String currentUserId = _auth.currentUser?.uid ?? '';
-    await _firestore
-        .collection('discussions')
-        .doc(widget.discussionId)
-        .collection('messages')
-        .add({
-      'senderId': currentUserId,
-      'message': message,
-      'imageUrl': imageUrl,
-      'sentAt': FieldValue.serverTimestamp(),
-    });
-
-    _messageController.clear();
-  } catch (e) {
-    print("Erreur lors de l'envoi du message : $e");
-  } finally {
-    // Petite temporisation pour permettre à l'interface de se stabiliser
-    await Future.delayed(Duration(milliseconds: 200));
+    if (_isSending) return;
     setState(() {
-      _isSending = false;
+      _isSending = true;
     });
+
+    try {
+      String currentUserId = _auth.currentUser?.uid ?? '';
+      await _firestore
+          .collection('discussions')
+          .doc(widget.discussionId)
+          .collection('messages')
+          .add({
+        'senderId': currentUserId,
+        'message': message,
+        'imageUrl': imageUrl,
+        'sentAt': FieldValue.serverTimestamp(),
+      });
+
+      _messageController.clear();
+    } catch (e) {
+      print("Erreur lors de l'envoi du message : $e");
+    } finally {
+      await Future.delayed(Duration(milliseconds: 200));
+      setState(() {
+        _isSending = false;
+      });
+    }
   }
-}
+
+ 
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+
 
   Future<void> _pickImage() async {
     final pickedFile = await showDialog<XFile>(
@@ -64,16 +71,14 @@ class _DiscussionPageState extends State<DiscussionPage> {
         actions: [
           TextButton(
             onPressed: () async {
-              final image =
-                  await _imagePicker.pickImage(source: ImageSource.camera);
+              final image = await _imagePicker.pickImage(source: ImageSource.camera);
               Navigator.of(context).pop(image);
             },
             child: Text('Caméra'),
           ),
           TextButton(
             onPressed: () async {
-              final image =
-                  await _imagePicker.pickImage(source: ImageSource.gallery);
+              final image = await _imagePicker.pickImage(source: ImageSource.gallery);
               Navigator.of(context).pop(image);
             },
             child: Text('Galerie'),
@@ -82,19 +87,27 @@ class _DiscussionPageState extends State<DiscussionPage> {
       ),
     );
 
-    if (pickedFile != null) {
-      String fileName = pickedFile.name;
-      File imageFile = File(pickedFile.path);
+   if (pickedFile != null) {
+    String fileName = '${DateTime.now().millisecondsSinceEpoch}_${pickedFile.name}';
+    File imageFile = File(pickedFile.path);
 
-      try {
-        TaskSnapshot snapshot =
-            await _storage.ref('images/$fileName').putFile(imageFile);
-        String downloadUrl = await snapshot.ref.getDownloadURL();
-        _sendMessage('', imageUrl: downloadUrl);
-      } catch (e) {
-        print("Erreur lors du téléchargement de l'image: $e");
-      }
+    try {
+      // Compresser l'image avant l'envoi
+      TaskSnapshot snapshot = await _storage
+          .ref('images/$fileName')
+          .putFile(
+            imageFile,
+            SettableMetadata(
+              contentType: 'image/jpeg',
+              cacheControl: 'public,max-age=31536000',
+            ),
+          );
+      String downloadUrl = await snapshot.ref.getDownloadURL();
+      _sendMessage('', imageUrl: downloadUrl);
+    } catch (e) {
+      print("Erreur lors du téléchargement de l'image: $e");
     }
+  }
   }
 
   Future<void> _deleteMessage(String messageId) async {
@@ -107,9 +120,7 @@ class _DiscussionPageState extends State<DiscussionPage> {
   }
 
   Future<void> _editMessage(String messageId, String currentMessage) async {
-    // Déclaration du TextEditingController
-    TextEditingController controller =
-        TextEditingController(text: currentMessage);
+    TextEditingController controller = TextEditingController(text: currentMessage);
 
     String? editedMessage = await showDialog<String>(
       context: context,
@@ -120,7 +131,7 @@ class _DiscussionPageState extends State<DiscussionPage> {
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
           ),
           content: TextField(
-            controller: controller, // Utilisation du contrôleur ici
+            controller: controller,
             decoration: InputDecoration(
               hintText: 'Entrez votre message',
               border: OutlineInputBorder(
@@ -131,7 +142,6 @@ class _DiscussionPageState extends State<DiscussionPage> {
           actions: [
             TextButton(
               onPressed: () {
-                // Vérification que le texte n'est pas vide avant de le retourner
                 Navigator.of(context)
                     .pop(controller.text.isNotEmpty ? controller.text : null);
               },
@@ -163,7 +173,7 @@ class _DiscussionPageState extends State<DiscussionPage> {
     return Scaffold(
       appBar: AppBar(
         scrolledUnderElevation: 0,
-        title: Text("Discussion"),
+          title: Text("Discussion"),
       ),
       body: Column(
         children: [
@@ -186,14 +196,13 @@ class _DiscussionPageState extends State<DiscussionPage> {
                   reverse: true,
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
-                    var messageData =
-                        messages[index].data() as Map<String, dynamic>;
+                    var messageData = messages[index].data() as Map<String, dynamic>;
                     String messageId = messages[index].id;
-                    bool isCurrentUser =
-                        messageData['senderId'] == _auth.currentUser?.uid;
+                    bool isCurrentUser = messageData['senderId'] == _auth.currentUser?.uid;
 
-                    DateTime sentAt =
-                        (messageData['sentAt'] as Timestamp).toDate();
+                    DateTime sentAt = messageData['sentAt'] != null 
+                        ? (messageData['sentAt'] as Timestamp).toDate()
+                        : DateTime.now();
 
                     return GestureDetector(
                       onLongPress: () {
@@ -206,12 +215,10 @@ class _DiscussionPageState extends State<DiscussionPage> {
                                 TextButton.icon(
                                   onPressed: () {
                                     Navigator.of(context).pop();
-                                    _editMessage(
-                                        messageId, messageData['message']);
+                                    _editMessage(messageId, messageData['message']);
                                   },
                                   icon: Icon(Icons.check, color: Colors.blue),
-                                  label: Text('Modifier',
-                                      style: TextStyle(color: Colors.blue)),
+                                  label: Text('Modifier', style: TextStyle(color: Colors.blue)),
                                 ),
                                 TextButton.icon(
                                   onPressed: () {
@@ -219,16 +226,14 @@ class _DiscussionPageState extends State<DiscussionPage> {
                                     _deleteMessage(messageId);
                                   },
                                   icon: Icon(Icons.delete, color: Colors.red),
-                                  label: Text('Supprimer',
-                                      style: TextStyle(color: Colors.red)),
+                                  label: Text('Supprimer', style: TextStyle(color: Colors.red)),
                                 ),
                                 TextButton.icon(
                                   onPressed: () {
                                     Navigator.of(context).pop();
                                   },
                                   icon: Icon(Icons.cancel, color: Colors.grey),
-                                  label: Text('Annuler',
-                                      style: TextStyle(color: Colors.grey)),
+                                  label: Text('Annuler', style: TextStyle(color: Colors.grey)),
                                 ),
                               ],
                             ),
@@ -241,13 +246,8 @@ class _DiscussionPageState extends State<DiscussionPage> {
                             : CrossAxisAlignment.start,
                         children: [
                           if (index == messages.length - 1 ||
-                              DateFormat('yMMMd').format(
-                                      (messages[index]['sentAt'] as Timestamp)
-                                          .toDate()) !=
-                                  DateFormat('yMMMd').format(
-                                      (messages[index + 1]['sentAt']
-                                              as Timestamp)
-                                          .toDate()))
+                              DateFormat('yMMMd').format((messages[index]['sentAt'] as Timestamp?)?.toDate() ?? DateTime.now()) !=
+                                  DateFormat('yMMMd').format((messages[index + 1]['sentAt'] as Timestamp?)?.toDate() ?? DateTime.now()))
                             Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Align(
@@ -262,8 +262,7 @@ class _DiscussionPageState extends State<DiscussionPage> {
                                   child: Center(
                                     child: Text(
                                       DateFormat('yMMMd').format(sentAt),
-                                      style: TextStyle(
-                                          fontSize: 10, color: Colors.white),
+                                      style: TextStyle(fontSize: 10, color: Colors.white),
                                     ),
                                   ),
                                 ),
@@ -289,84 +288,113 @@ class _DiscussionPageState extends State<DiscussionPage> {
     );
   }
 
-  Widget _buildMessageBubble(
-      String message, bool isCurrentUser, DateTime sentAt,
-      {String? imageUrl}) {
-    return Align(
-      alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        constraints:
-            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 14),
-        margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-        decoration: BoxDecoration(
-          color: isCurrentUser ? couleurSecondaire : Colors.grey[300],
-          borderRadius: isCurrentUser
-              ? BorderRadius.only(
-                  topLeft: Radius.circular(15),
-                  topRight: Radius.circular(15),
-                  bottomLeft: Radius.circular(15),
-                )
-              : BorderRadius.only(
-                  topLeft: Radius.circular(15),
-                  topRight: Radius.circular(15),
-                  bottomRight: Radius.circular(15),
-                ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (imageUrl != null) Image.network(imageUrl),
-            Text(
-              message,
-              style: TextStyle(
-                color: isCurrentUser ? Colors.black : Colors.black,
+Widget _buildMessageBubble(String message, bool isCurrentUser, DateTime sentAt,
+    {String? imageUrl}) {
+  return Align(
+    alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
+    child: Container(
+      constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+      decoration: BoxDecoration(
+        color: isCurrentUser ? couleurSecondaire : Colors.grey[300],
+        borderRadius: isCurrentUser
+            ? BorderRadius.only(
+                topLeft: Radius.circular(15),
+                topRight: Radius.circular(15),
+                bottomLeft: Radius.circular(15),
+              )
+            : BorderRadius.only(
+                topLeft: Radius.circular(15),
+                topRight: Radius.circular(15),
+                bottomRight: Radius.circular(15),
               ),
-            ),
-            Text(
-              DateFormat('HH:mm').format(sentAt),
-              style: TextStyle(fontSize: 10, color: Colors.grey),
-            ),
-          ],
-        ),
       ),
-    );
-  }
-
- Widget _buildMessageInputField() {
-  return Padding(
-    padding: const EdgeInsets.all(8.0),
-    child: Row(
-      children: [
-        IconButton(
-          icon: Icon(Icons.photo, color: couleurPrincipale),
-          onPressed: _pickImage,
-        ),
-        Expanded(
-          child: TextField(
-            controller: _messageController,
-            decoration: InputDecoration(
-              hintText: 'Écrivez votre message...',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (imageUrl != null)
+            Container(
+              constraints: BoxConstraints(
+                maxHeight: 200, // Hauteur maximale fixe
+                maxWidth: MediaQuery.of(context).size.width * 0.8, // Largeur maximale proportionnelle
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.contain,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(Icons.error);
+                  },
+                ),
               ),
             ),
-          ),
-        ),
-        _isSending
-            ? CircularProgressIndicator() // Indicateur de chargement pendant l'envoi
-            : IconButton(
-                icon: Icon(Icons.send, color: couleurPrincipale),
-                onPressed: _isSending
-                    ? null // Désactive le bouton s'il est en train d'envoyer
-                    : () {
-                        if (_messageController.text.isNotEmpty) {
-                          _sendMessage(_messageController.text);
-                        }
-                      },
+          if (message.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(
+                message,
+                style: TextStyle(
+                  color: isCurrentUser ? Colors.black : Colors.black,
+                ),
               ),
-      ],
+            ),
+          Text(
+            DateFormat('HH:mm').format(sentAt),
+            style: TextStyle(fontSize: 10, color: Colors.grey),
+          ),
+        ],
+      ),
     ),
   );
 }
+
+  Widget _buildMessageInputField() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        children: [
+          IconButton(
+            icon: Icon(Icons.photo, color: couleurPrincipale),
+            onPressed: _pickImage,
+          ),
+          Expanded(
+            child: TextField(
+              controller: _messageController,
+              decoration: InputDecoration(
+                hintText: 'Écrivez votre message...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+            ),
+          ),
+          _isSending
+              ? CircularProgressIndicator()
+              : IconButton(
+                  icon: Icon(Icons.send, color: couleurPrincipale),
+                  onPressed: _isSending
+                      ? null
+                      : () {
+                          if (_messageController.text.isNotEmpty) {
+                            _sendMessage(_messageController.text);
+                          }
+                        },
+                ),
+        ],
+      ),
+    );
+  }
 }

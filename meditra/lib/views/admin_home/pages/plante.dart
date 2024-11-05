@@ -26,7 +26,8 @@ class _PlantePageState extends State<PlantePage> {
     return Scaffold(
       backgroundColor: Colors.grey[200],
       appBar: AppBar(
-        backgroundColor: Colors.grey[200],
+       scrolledUnderElevation: 0,
+        backgroundColor: Colors.white,
         title: Row(
           children: [
             Text('Liste des Plantes',

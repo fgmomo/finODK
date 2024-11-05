@@ -19,35 +19,46 @@ class CustomBottomNavigationBarPraticien extends StatelessWidget {
       items: const <BottomNavigationBarItem>[
         BottomNavigationBarItem(
           icon: Icon(Icons.home),
-          label: '', // Label vide
+          label: 'Accueil', // Label ajouté
         ),
-        
         BottomNavigationBarItem(
           icon: Icon(Icons.calendar_today),
-          label: '', // Label vide
+          label: 'Consultation', // Label ajouté
         ),
-      
         BottomNavigationBarItem(
           icon: Icon(Icons.local_pharmacy),
-          label: '', // Label vide
+          label: 'Rémèdes', // Label ajouté
         ),
-          BottomNavigationBarItem(
+        BottomNavigationBarItem(
           icon: Icon(Icons.description),
-          label: '', // Label vide
+          label: 'Articles', // Label ajouté
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person),
-          label: '', // Label vide
+          label: 'Profil', // Label ajouté
         ),
       ],
       selectedItemColor: couleurPrincipale,
-      unselectedItemColor: const Color.fromARGB(255, 187, 216, 187),
+      unselectedItemColor: couleurSecondaire,
       backgroundColor: Colors.white,
       type: BottomNavigationBarType.fixed,
-      showSelectedLabels: false, // Ne pas afficher les labels sélectionnés
-      showUnselectedLabels:
-          false, // Ne pas afficher les labels non sélectionnés
-      iconSize: 30, // Ajuste la taille des icônes
+      showSelectedLabels: true, // Afficher les labels sélectionnés
+      showUnselectedLabels: true, // Afficher les labels non sélectionnés
+      iconSize: 26, 
+      
+      // Styles pour les labels
+      selectedLabelStyle: TextStyle(
+        fontSize: 12, // Taille de la police pour les labels sélectionnés
+        // fontWeight: FontWeight.bold, // Épaisseur de la police
+        color: couleurPrincipale, // Couleur du label sélectionné
+        fontFamily: policePoppins, // Remplace 'Roboto' par la police de ton choix
+      ),
+      unselectedLabelStyle: TextStyle(
+        fontSize: 9, // Taille de la police pour les labels non sélectionnés
+        // fontWeight: FontWeight.normal, // Épaisseur de la police
+        color: couleurSecondaire, // Couleur du label non sélectionné
+        fontFamily: policeLato, // Police de ton choix pour les labels non sélectionnés
+      ),// Ajuste la taille des icônes
     );
   }
 }

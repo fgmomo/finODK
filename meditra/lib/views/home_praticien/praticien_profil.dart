@@ -172,11 +172,11 @@ class _PraticienProfilScreenState extends State<PraticienProfilScreen> {
                       },
                     ),
                     _buildDivider(),
-                    _buildListItem(
-                      icon: Icons.help_outline,
-                      title: 'Aide',
-                      onTap: () {},
-                    ),
+                    // _buildListItem(
+                    //   icon: Icons.help_outline,
+                    //   title: 'Aide',
+                    //   onTap: () {},
+                    // ),
                     _buildDivider(),
                     _buildListItem(
                       icon: Icons.privacy_tip_outlined,
